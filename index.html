@@ -1280,6 +1280,11 @@ body {
    ============================================================ */
 // 1. SET API URL sesuai instruksi
 const API_URL = "https://script.google.com/macros/s/AKfycbxvzWgRfqh0Nz0dgO2uTOYeSqey68CJukZEdNLj-e0belVAAexHefWa71PIvb5O2-Cz/exec";
+
+if (!localStorage.getItem("cbt_school_code")) {
+  localStorage.setItem("cbt_school_code", "default_school");
+}
+
 const DEFAULT_LOGO = "https://i.imghippo.com/files/KBnG7926xY.webp";
 
 // 2. AMBIL SCHOOL CODE DARI URL SAAT LOAD
@@ -1400,12 +1405,16 @@ function applySchoolIdentity() {
 // 3. FUNGSI KIRIM HASIL KE BACKEND 
 async function sendResultToBackend(nama, score) {
   try {
-    const res = await fetch(API_URL, {
+    const school = localStorage.getItem("cbt_school_code") || "default_school";
+    
+    const res = await fetch(`${API_URL}?action=save&apikey=TKA_2026_SECURE`, {
       method: "POST",
+      // Tambahkan headers ini jika nanti terjadi error CORS "Mode tidak valid" lagi
+      // headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({
-        nama: nama,
-        score: score,
-        school: localStorage.getItem("cbt_school_code")
+        nama,
+        score,
+        school
       })
     });
     const data = await res.json();
@@ -1421,41 +1430,61 @@ async function sendResultToBackend(nama, score) {
   }
 }
 
-// 4. FUNGSI FETCH & RENDER LEADERBOARD
 async function fetchLeaderboard() {
   const lbList = document.getElementById("leaderboard-list");
-  lbList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--gray-500); font-weight: 600;">⏳ Memuat leaderboard...</div>';
+
+  lbList.innerHTML = "Memuat leaderboard...";
+
   try {
-    const school = localStorage.getItem("cbt_school_code");
-    const res = await fetch(API_URL + "?mode=leaderboard&school=" + school);
+    let school = localStorage.getItem("cbt_school_code");
+
+    // fallback biar gak null
+    if (!school) {
+      school = "default_school";
+      localStorage.setItem("cbt_school_code", school);
+    }
+
+    const url = `${API_URL}?action=leaderboard&school=${encodeURIComponent(school)}&apikey=TKA_2026_SECURE`;
+
+    console.log("FETCH URL:", url);
+
+    const res = await fetch(url);
     const json = await res.json();
+
+    console.log("RESPONSE:", json);
 
     if (json.status !== "success") {
       throw new Error(json.message);
     }
 
     renderLeaderboard(json.data);
+
   } catch (err) {
-    console.error(err);
-    lbList.innerHTML = '<div style="text-align:center; padding:15px; color:var(--red-500);">Gagal memuat leaderboard</div>';
+    console.error("ERROR:", err);
+    lbList.innerHTML = "Gagal memuat leaderboard";
   }
 }
 
 function renderLeaderboard(data) {
   const lbList = document.getElementById("leaderboard-list");
-  if (!data || data.length === 0) {
-    lbList.innerHTML = '<div style="text-align:center; padding:15px; color:var(--gray-500);">Belum ada data</div>';
+  
+  // 5. Fallback UI & 6. Validasi Clean Code
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    lbList.innerHTML = '<div style="text-align:center; padding:15px; color:var(--gray-500); font-weight:500;">Belum ada data di papan peringkat.</div>';
     return;
   }
   
   // Menerapkan UI baris yang matching dengan visual profesional awal (ux lb-row)
   lbList.innerHTML = data.map((item, index) => {
+    // 7. Security Basic (Escape HTML & Validasi Default)
+    const safeNama = item.nama ? escHtml(String(item.nama)) : "Anonim";
     const isMe = item.nama === state.nama;
-    const skorItem = item.score !== undefined ? item.score : item.skor;
+    const skorItem = item.score !== undefined ? Number(item.score) : (item.skor !== undefined ? Number(item.skor) : 0);
+    
     return `
     <div class="lb-row ${isMe ? 'is-me' : ''}">
       <div class="lb-rank">#${index + 1}</div>
-      <div class="lb-name">${escHtml(item.nama)}${isMe ? ' (Kamu)' : ''}</div>
+      <div class="lb-name">${safeNama}${isMe ? ' (Kamu)' : ''}</div>
       <div class="lb-score">${skorItem}</div>
     </div>`;
   }).join("");
