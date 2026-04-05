@@ -1402,66 +1402,111 @@ function applySchoolIdentity() {
   });
 }
 
-// 3. FUNGSI KIRIM HASIL KE BACKEND 
-async function sendResultToBackend(nama, score) {
-  try {
-    const school = localStorage.getItem("cbt_school_code") || "default_school";
-    
-    const res = await fetch(`${API_URL}?action=save&apikey=TKA_2026_SECURE`, {
-      method: "POST",
-      // Tambahkan headers ini jika nanti terjadi error CORS "Mode tidak valid" lagi
-      // headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        nama,
-        score,
-        school
-      })
-    });
-    const data = await res.json();
+// ==========================================
+// 🔥 FUNGSI HELPER: FETCH DENGAN AUTO-RETRY
+// ==========================================
+async function fetchWithRetry(url, options = {}, retries = 3, delay = 1000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url, options);
+      
+      // Cek res.ok sesuai standar production
+      if (!res.ok) {
+        throw new Error(`HTTP Error: ${res.status}`);
+      }
 
-    if (data.status !== "success") {
-      throw new Error(data.message);
+      const text = await res.text();
+      
+      // Tangani kemungkinan respons bukan JSON
+      try {
+        return JSON.parse(text);
+      } catch (parseError) {
+        throw new Error("Respons dari server bukan format JSON yang valid.");
+      }
+
+    } catch (err) {
+      if (i === retries - 1) throw err; // Lempar error jika percobaan terakhir gagal
+      console.warn(`[CBT Fetch] Percobaan ${i + 1} gagal, mengulang dalam ${delay}ms...`, err.message);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
-
-    showToast("success", "Hasil berhasil disimpan");
-  } catch (err) {
-    console.error(err);
-    showToast("error", "Gagal kirim data");
   }
 }
 
+// ==========================================
+// 3. FUNGSI KIRIM HASIL KE BACKEND (POST)
+// ==========================================
+async function sendResultToBackend(nama, score) {
+  try {
+    let school = localStorage.getItem("cbt_school_code");
+    if (!school || school.trim() === "" || school === "null" || school === "undefined") {
+      school = "default_school";
+    }
+
+    console.log("[CBT Debug] POST URL:", API_URL);
+    console.log("[CBT Debug] POST Payload:", { nama, score, school });
+
+    // Kirim ke endpoint utama tanpa query string, gunakan method POST & header text/plain
+    const json = await fetchWithRetry(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: JSON.stringify({
+        nama: nama,
+        score: score,
+        school: school
+      })
+    }, 3, 2000); // Retry 3x, jeda 2 detik
+
+    console.log("[CBT Debug] POST Response:", json);
+
+    if (json && json.status !== "success") {
+      throw new Error(json.message || "Gagal menyimpan data ke server.");
+    }
+
+    showToast("success", "Sinkronisasi Berhasil", "Hasil ujianmu sudah tersimpan aman di server.");
+  } catch (err) {
+    console.error("[CBT Error] Submit ke backend gagal:", err);
+    showToast("error", "Koneksi Terputus", "Gagal menyimpan hasil: " + err.message);
+  }
+}
+
+// ==========================================
+// 4. FUNGSI AMBIL LEADERBOARD (GET)
+// ==========================================
 async function fetchLeaderboard() {
   const lbList = document.getElementById("leaderboard-list");
-
-  lbList.innerHTML = "Memuat leaderboard...";
+  
+  // Tampilkan loading state responsif
+  lbList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--gray-500); font-weight: 600;">⏳ Memuat leaderboard...</div>';
 
   try {
     let school = localStorage.getItem("cbt_school_code");
 
-    // fallback biar gak null
-    if (!school) {
+    // fallback biar tidak null
+    if (!school || school.trim() === "" || school === "null" || school === "undefined") {
       school = "default_school";
       localStorage.setItem("cbt_school_code", school);
     }
 
-    const url = `${API_URL}?action=leaderboard&school=${encodeURIComponent(school)}&apikey=TKA_2026_SECURE`;
+    // Endpoint spesifik mode & school
+    const url = `${API_URL}?mode=leaderboard&school=${encodeURIComponent(school)}`;
+    console.log("[CBT Debug] GET URL:", url);
 
-    console.log("FETCH URL:", url);
+    const json = await fetchWithRetry(url, { method: "GET" }, 3, 1500); // Retry 3x, jeda 1.5 dtk
+    console.log("[CBT Debug] GET Response:", json);
 
-    const res = await fetch(url);
-    const json = await res.json();
-
-    console.log("RESPONSE:", json);
-
-    if (json.status !== "success") {
-      throw new Error(json.message);
+    if (!json || json.status !== "success") {
+      throw new Error(json ? json.message : "Respons tidak valid dari server");
     }
 
     renderLeaderboard(json.data);
 
   } catch (err) {
-    console.error("ERROR:", err);
-    lbList.innerHTML = "Gagal memuat leaderboard";
+    console.error("[CBT Error] fetchLeaderboard gagal:", err);
+    // User-friendly error message
+    const errorMessage = err.message || "Koneksi ke server tidak stabil.";
+    lbList.innerHTML = `<div style="text-align:center; padding:15px; color:var(--red-500); font-weight: 500;">❌ Gagal memuat leaderboard:<br/><span style="font-size:12px; color:var(--gray-500);">${escHtml(errorMessage)}</span></div>`;
   }
 }
 
