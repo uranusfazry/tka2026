@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title id="app-title">Simulasi TKA – Sekolah SD/MI by Uranusfazry</title>
+  <title id="app-title">Simulasi TKA – MI Panatasan by Uranusfazry</title>
 </head>
 <style>
 /* ============================
@@ -137,7 +137,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: transparent;
+  background: transparent; /* Menggunakan background body (#F5F7FA) */
   position: relative;
   overflow: hidden;
   padding: 24px;
@@ -893,11 +893,11 @@ body {
    ============================ */
 .modal-overlay {
   position: fixed; inset: 0;
-  background: rgba(0, 0, 0, 0.75); 
+  background: rgba(0, 0, 0, 0.75); /* Perbaikan: Background overlay solid */
   backdrop-filter: blur(8px); 
   -webkit-backdrop-filter: blur(8px);
   display: flex; align-items: center; justify-content: center;
-  z-index: 99999; 
+  z-index: 99999; /* Perbaikan: Z-index sangat tinggi */
   padding: 20px;
   opacity: 0;
   pointer-events: none;
@@ -1058,7 +1058,7 @@ body {
       <img src="https://i.imghippo.com/files/KBnG7926xY.webp" alt="Logo" />
     </div>
     <div class="login-title">Simulasi TKA</div>
-    <div class="login-sub"><span class="school-name">Nama Sekolah</span> &nbsp;·&nbsp; Kelas 6</div>
+    <div class="login-sub"><span class="school-name">MI Panatasan</span> &nbsp;·&nbsp; Kelas 6</div>
 
     <div class="form-group">
       <label for="inp-nama">Nama Lengkap</label>
@@ -1100,7 +1100,7 @@ body {
           <img src="https://i.imghippo.com/files/KBnG7926xY.webp" alt="Logo" />
         </div>
         <div class="topbar-title">
-          Simulasi TKA <span class="school-name">Nama Sekolah</span>
+          Simulasi TKA <span class="school-name">MI Panatasan</span>
           <span>Tes Kompetensi Akademik</span>
         </div>
       </div>
@@ -1196,7 +1196,7 @@ body {
   <div class="result-topbar">
     <div>
       <h2>Hasil Ujian – Simulasi TKA</h2>
-      <span><span class="school-name">Nama Sekolah</span> &nbsp;·&nbsp; Kelas 6</span>
+      <span><span class="school-name">MI Panatasan</span> &nbsp;·&nbsp; Kelas 6</span>
     </div>
   </div>
   <div class="result-container anim-fade">
@@ -1278,19 +1278,8 @@ body {
 /* ============================================================
    🔥 UPGRADE: MULTI SCHOOL & BACKEND SYSTEM
    ============================================================ */
-// 1. SET API URL sesuai instruksi
-const API_URL = "https://script.google.com/macros/s/AKfycbxvzWgRfqh0Nz0dgO2uTOYeSqey68CJukZEdNLj-e0belVAAexHefWa71PIvb5O2-Cz/exec";
-
-if (!localStorage.getItem("cbt_school_code")) {
-  localStorage.setItem("cbt_school_code", "default_school");
-}
-
+const API_URL = "PASTE_APPS_SCRIPT_URL";
 const DEFAULT_LOGO = "https://i.imghippo.com/files/KBnG7926xY.webp";
-
-// 2. AMBIL SCHOOL CODE DARI URL SAAT LOAD
-const params = new URLSearchParams(window.location.search);
-const schoolCode = params.get("school") || "default_school";
-localStorage.setItem("cbt_school_code", schoolCode);
 
 function initSchoolSetup() {
   const savedName = localStorage.getItem("cbt_school_name");
@@ -1327,9 +1316,8 @@ function initSchoolSetup() {
 
         // Simpan data universal
         localStorage.setItem("cbt_school_name", nameInput);
-        
-        // Catatan: schoolCode sudah diset di atas via URL Params 
-        // sehingga tidak ditimpa oleh math random disini lagi
+        // Buat ID unik untuk backend klasemen berdasarkan nama (spasi hilang)
+        localStorage.setItem("cbt_school_code", nameInput.toLowerCase().replace(/[^a-z0-9]/g, ''));
         
         if (tempLogoBase64) {
           localStorage.setItem("cbt_school_logo", tempLogoBase64);
@@ -1377,8 +1365,9 @@ function applySchoolIdentity() {
     el.textContent = schoolName;
   });
 
-  // Ganti semua logo secara global dengan filter ketat
+  // 🔥 PERBAIKAN: Ganti semua logo secara global dengan filter ketat
   document.querySelectorAll('img').forEach(img => {
+    // Periksa class wrapper atau jika src masih menggunakan URL logo lama
     if (img.closest('.school-logo') || img.src.includes('fjL7781Prg.webp') || img.src.includes('kg7630LM.png')) {
       img.src = schoolLogo;
       img.classList.add('logo-updated'); // Class tambahan untuk styling
@@ -1391,7 +1380,7 @@ function applySchoolIdentity() {
       favicon.href = schoolLogo;
   }
 
-  // Hilangkan background image logo (ghost/blur issue)
+  // 🔥 PERBAIKAN: Hilangkan background image logo (ghost/blur issue)
   document.querySelectorAll('*').forEach(el => {
     try {
       const style = window.getComputedStyle(el);
@@ -1402,138 +1391,65 @@ function applySchoolIdentity() {
   });
 }
 
-// ==========================================
-// 🔥 FUNGSI HELPER: FETCH DENGAN AUTO-RETRY
-// ==========================================
-async function fetchWithRetry(url, options = {}, retries = 3, delay = 1000) {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const res = await fetch(url, options);
+function sendResultToBackend(finalScore) {
+  const schoolCode = localStorage.getItem("cbt_school_code") || "default";
+  
+  // Cegah error jika API belum diset
+  if (API_URL === "PASTE_APPS_SCRIPT_URL") return; 
+
+  fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      nama: state.nama,
+      score: finalScore,
+      school: schoolCode
+    })
+  }).catch(err => {
+    console.error("Gagal sinkron data hasil ujian:", err);
+    showToast("error", "Sinkronisasi Gagal", "Gagal menyimpan hasil ke server utama.");
+  });
+}
+
+function fetchLeaderboard() {
+  const schoolCode = localStorage.getItem("cbt_school_code") || "default";
+  const lbList = document.getElementById('leaderboard-list');
+
+  if (API_URL === "PASTE_APPS_SCRIPT_URL") {
+     // Gunakan UI dari localstorage (sistem lama) jika API_URL blm ada
+     return;
+  }
+
+  fetch(API_URL + "?mode=leaderboard&school=" + schoolCode)
+    .then(res => res.json())
+    .then(data => {
+      lbList.innerHTML = '';
       
-      // Cek res.ok sesuai standar production
-      if (!res.ok) {
-        throw new Error(`HTTP Error: ${res.status}`);
+      if (!data || data.length === 0) {
+         lbList.innerHTML = '<div style="text-align:center; padding:15px; color:var(--gray-500);">Belum ada data klamesmen dari server.</div>';
+         return;
       }
 
-      const text = await res.text();
-      
-      // Tangani kemungkinan respons bukan JSON
-      try {
-        return JSON.parse(text);
-      } catch (parseError) {
-        throw new Error("Respons dari server bukan format JSON yang valid.");
-      }
-
-    } catch (err) {
-      if (i === retries - 1) throw err; // Lempar error jika percobaan terakhir gagal
-      console.warn(`[CBT Fetch] Percobaan ${i + 1} gagal, mengulang dalam ${delay}ms...`, err.message);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-  }
+      data.forEach((r, idx) => {
+        const isMe = r.nama === state.nama;
+        const timeStr = r.waktu ? `${Math.floor(r.waktu / 60)}m ${r.waktu % 60}s` : '-';
+        
+        lbList.innerHTML += `
+          <div class="lb-row ${isMe ? 'is-me' : ''}">
+            <div class="lb-rank">#${idx + 1}</div>
+            <div class="lb-name">${escHtml(r.nama)}${isMe ? ' (Kamu)' : ''}</div>
+            <div class="lb-score">${r.score || r.skor}</div>
+            <div class="lb-time">⏱️ ${timeStr}</div>
+          </div>
+        `;
+      });
+    })
+    .catch(err => {
+      console.error("Gagal fetch leaderboard backend:", err);
+      showToast("error", "Leaderboard Error", "Gagal memuat leaderboard dari server.");
+    });
 }
 
-// ==========================================
-// 3. FUNGSI KIRIM HASIL KE BACKEND (POST)
-// ==========================================
-async function sendResultToBackend(nama, score) {
-  try {
-    let school = localStorage.getItem("cbt_school_code");
-    if (!school || school.trim() === "" || school === "null" || school === "undefined") {
-      school = "default_school";
-    }
-
-    console.log("[CBT Debug] POST URL:", API_URL);
-    console.log("[CBT Debug] POST Payload:", { nama, score, school });
-
-    // Kirim ke endpoint utama tanpa query string, gunakan method POST & header text/plain
-    const json = await fetchWithRetry(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8"
-      },
-      body: JSON.stringify({
-        nama: nama,
-        score: score,
-        school: school
-      })
-    }, 3, 2000); // Retry 3x, jeda 2 detik
-
-    console.log("[CBT Debug] POST Response:", json);
-
-    if (json && json.status !== "success") {
-      throw new Error(json.message || "Gagal menyimpan data ke server.");
-    }
-
-    showToast("success", "Sinkronisasi Berhasil", "Hasil ujianmu sudah tersimpan aman di server.");
-  } catch (err) {
-    console.error("[CBT Error] Submit ke backend gagal:", err);
-    showToast("error", "Koneksi Terputus", "Gagal menyimpan hasil: " + err.message);
-  }
-}
-
-// ==========================================
-// 4. FUNGSI AMBIL LEADERBOARD (GET)
-// ==========================================
-async function fetchLeaderboard() {
-  const lbList = document.getElementById("leaderboard-list");
-  
-  // Tampilkan loading state responsif
-  lbList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--gray-500); font-weight: 600;">⏳ Memuat leaderboard...</div>';
-
-  try {
-    let school = localStorage.getItem("cbt_school_code");
-
-    // fallback biar tidak null
-    if (!school || school.trim() === "" || school === "null" || school === "undefined") {
-      school = "default_school";
-      localStorage.setItem("cbt_school_code", school);
-    }
-
-    // Endpoint spesifik mode & school
-    const url = `${API_URL}?mode=leaderboard&school=${encodeURIComponent(school)}`;
-    console.log("[CBT Debug] GET URL:", url);
-
-    const json = await fetchWithRetry(url, { method: "GET" }, 3, 1500); // Retry 3x, jeda 1.5 dtk
-    console.log("[CBT Debug] GET Response:", json);
-
-    if (!json || json.status !== "success") {
-      throw new Error(json ? json.message : "Respons tidak valid dari server");
-    }
-
-    renderLeaderboard(json.data);
-
-  } catch (err) {
-    console.error("[CBT Error] fetchLeaderboard gagal:", err);
-    // User-friendly error message
-    const errorMessage = err.message || "Koneksi ke server tidak stabil.";
-    lbList.innerHTML = `<div style="text-align:center; padding:15px; color:var(--red-500); font-weight: 500;">❌ Gagal memuat leaderboard:<br/><span style="font-size:12px; color:var(--gray-500);">${escHtml(errorMessage)}</span></div>`;
-  }
-}
-
-function renderLeaderboard(data) {
-  const lbList = document.getElementById("leaderboard-list");
-  
-  // 5. Fallback UI & 6. Validasi Clean Code
-  if (!data || !Array.isArray(data) || data.length === 0) {
-    lbList.innerHTML = '<div style="text-align:center; padding:15px; color:var(--gray-500); font-weight:500;">Belum ada data di papan peringkat.</div>';
-    return;
-  }
-  
-  // Menerapkan UI baris yang matching dengan visual profesional awal (ux lb-row)
-  lbList.innerHTML = data.map((item, index) => {
-    // 7. Security Basic (Escape HTML & Validasi Default)
-    const safeNama = item.nama ? escHtml(String(item.nama)) : "Anonim";
-    const isMe = item.nama === state.nama;
-    const skorItem = item.score !== undefined ? Number(item.score) : (item.skor !== undefined ? Number(item.skor) : 0);
-    
-    return `
-    <div class="lb-row ${isMe ? 'is-me' : ''}">
-      <div class="lb-rank">#${index + 1}</div>
-      <div class="lb-name">${safeNama}${isMe ? ' (Kamu)' : ''}</div>
-      <div class="lb-score">${skorItem}</div>
-    </div>`;
-  }).join("");
-}
 
 /* ============================================================
    🔥 UPGRADE: SYSTEM TOAST MODERN (ANTI-DUPLICATE & MAX LIMIT)
@@ -1682,11 +1598,11 @@ function applyRippleEffect() {
 }
 applyRippleEffect();
 
-/* ============================================================
-   DATA: BANK SOAL HOTS FALLBACK
+    /* ============================================================
+   DATA: BANK SOAL HOTS FALLBACK (TIDAK DIHAPUS)
    ============================================================ */
 let BANK_SOAL = [
-  {
+    {
     "id": 1, "mapel": "Bahasa Indonesia", "type": "pg", "difficulty": "medium", "skill": "inferensi",
     "teks": "Bacalah cerita ini!\n\nDulu, Desa Sukatani sangat kering dan sulit air. Namun, Pak Kepala Desa mengajak warga menanam pohon aren di bukit. Sekarang, desa itu menjadi hijau, air tanah melimpah, dan warga mendapat uang tambahan dari menjual gula aren.\n\nKesimpulan dari cerita di atas adalah...",
     "opsi": ["Pohon aren bisa hidup di tanah yang kering dan kurang air.", "Warga Desa Sukatani sekarang menjadi kaya raya karena gula aren.", "Menanam pohon membawa kebaikan untuk alam dan keuangan warga.", "Pak Kades memaksa warganya menanam pohon aren untuk dijual."],
@@ -1850,6 +1766,7 @@ function startExam() {
   history.pushState({examActive: true}, document.title, location.href);
   showToast('success', 'Ujian Dimulai', 'Selamat mengerjakan, semoga sukses!');
 
+  // FITUR BARU: Mode Serius (Fullscreen)
   const elem = document.documentElement;
   if (elem.requestFullscreen) { elem.requestFullscreen().catch(()=>{}); }
   else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen().catch(()=>{}); }
@@ -2106,6 +2023,8 @@ function generateExamQuestions(materiPilihan) {
   let pgBank = BANK_SOAL.filter(s => s.type === 'pg');
   let esaiBank = BANK_SOAL.filter(s => s.type === 'esai');
   
+  // SISTEM CBT PROFESIONAL: Ambil 30 soal acak dari total bank soal
+  // Proporsi standar TKA: 21 Pilihan Ganda, 9 Esai
   let targetPG = 21;
   let targetEsai = 9;
   let activePG = [];
@@ -2117,13 +2036,13 @@ function generateExamQuestions(materiPilihan) {
   if (materiPilihan !== 'Acak') {
     let pgPrioritas = pgBank.filter(s => s.mapel === materiPilihan);
     let pgLain = pgBank.filter(s => s.mapel !== materiPilihan);
-    let takePG = Math.min(Math.round(targetPG * 0.65), pgPrioritas.length); 
+    let takePG = Math.min(Math.round(targetPG * 0.65), pgPrioritas.length); // ~65% mapel favorit
     activePG.push(...pgPrioritas.slice(0, takePG)); 
     activePG.push(...pgLain.slice(0, targetPG - activePG.length));
     
     let esaiPrioritas = esaiBank.filter(s => s.mapel === materiPilihan);
     let esaiLain = esaiBank.filter(s => s.mapel !== materiPilihan);
-    let takeEsai = Math.min(Math.round(targetEsai * 0.65), esaiPrioritas.length); 
+    let takeEsai = Math.min(Math.round(targetEsai * 0.65), esaiPrioritas.length); // ~65% mapel favorit
     activeEsai.push(...esaiPrioritas.slice(0, takeEsai)); 
     activeEsai.push(...esaiLain.slice(0, targetEsai - activeEsai.length));
   } else {
@@ -2333,14 +2252,6 @@ function explainEssay(answer, question) {
    ============================================================ */
 function doSubmit() {
   if (state.submitted) return;
-  
-  // 5. LOADING UX: MENDISABLE TOMBOL DAN MERUBAH TEKS MENJADI MEMUAT...
-  const btnFooter = document.getElementById('btn-submit-footer');
-  const btnSidebar = document.getElementById('btn-finish');
-  
-  if (btnFooter) { btnFooter.disabled = true; btnFooter.innerHTML = '⏳ Menyimpan...'; }
-  if (btnSidebar) { btnSidebar.disabled = true; btnSidebar.innerHTML = '⏳ Menyimpan...'; }
-
   state.submitted = true;
   saveCurrentEssay();
   
@@ -2349,10 +2260,8 @@ function doSubmit() {
   
   if (document.exitFullscreen) { document.exitFullscreen().catch(()=>{}); }
 
-  setTimeout(() => {
-    showResult();
-    showToast('success', 'Ujian Selesai', 'Terima kasih, jawabanmu sudah dikumpulkan.');
-  }, 500);
+  showResult();
+  showToast('success', 'Ujian Selesai', 'Terima kasih, jawabanmu sudah dikumpulkan.');
 }
 
 function showResult() {
@@ -2427,9 +2336,35 @@ function showResult() {
     }
   }
 
-  // 6. AUTO LOAD BACKEND & KESUKSESAN
-  // Memicu trigger send backend secara transparan lalu load leaderboard baru
-  sendResultToBackend(state.nama, finalWeightedScore);
+  const timeSpent = (60 * 60) - state.timer; 
+  let resultsArr = JSON.parse(localStorage.getItem('cbt_results') || '[]');
+  resultsArr.push({ nama: state.nama, skor: finalWeightedScore, waktu: timeSpent, ts: Date.now() });
+  
+  resultsArr.sort((a, b) => b.skor - a.skor || a.waktu - b.waktu);
+  resultsArr = resultsArr.slice(0, 10);
+  localStorage.setItem('cbt_results', JSON.stringify(resultsArr));
+
+  // Render UI lokal terlebih dahulu (sebagai fallback cepat)
+  const lbList = $('leaderboard-list');
+  lbList.innerHTML = '';
+  resultsArr.forEach((r, idx) => {
+    const isMe = r.ts === resultsArr.find(mr => mr.nama === state.nama && mr.skor === finalWeightedScore)?.ts;
+    const mins = Math.floor(r.waktu / 60);
+    const secs = r.waktu % 60;
+    const timeStr = `${mins}m ${secs}s`;
+    
+    lbList.innerHTML += `
+      <div class="lb-row ${isMe ? 'is-me' : ''}">
+        <div class="lb-rank">#${idx + 1}</div>
+        <div class="lb-name">${escHtml(r.nama)}${isMe ? ' (Kamu)' : ''}</div>
+        <div class="lb-score">${r.skor}</div>
+        <div class="lb-time">⏱️ ${timeStr}</div>
+      </div>
+    `;
+  });
+
+  // 🔥 TRIGGER BACKEND SYNC & REAL LEADERBOARD FETCH OVERWRITE
+  sendResultToBackend(finalWeightedScore);
   fetchLeaderboard();
 
   const revPG = $('review-pg');
@@ -2631,6 +2566,112 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// =========================================================================
+// === BACKEND INTEGRATION START ===
+// =========================================================================
+const BACKEND_API_URL = "https://script.google.com/macros/s/AKfycbwYvDakTIPW6CGARpIScL0f33mWKFDCxKoWF8oR_DLdbtKFfMJO0gyNr3qFvN9kbm4g/exec";
+
+// Kita tidak menghapus fungsi lama, namun MENGGANTIKAN-nya di bawah sini 
+// karena sistem JavaScript "Hoisting" akan menjalankan versi terbaru ini.
+
+function sendResultToBackend(finalScore) {
+  const schoolCode = localStorage.getItem("cbt_school_code") || "default";
+  const timeSpent = (60 * 60) - state.timer; // Kalkulasi ulang waktu
+
+  const payload = {
+    nama: state.nama,
+    score: finalScore,
+    school: schoolCode,
+    waktu: timeSpent
+  };
+
+  showToast("info", "Menyimpan Hasil", "Sedang mengirim data ke server...");
+
+  let retries = 3;
+  const attemptSend = () => {
+    // text/plain digunakan agar GAS tidak error akibat sistem keamanan CORS
+    fetch(BACKEND_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === 'success') {
+        showToast("success", "Tersimpan", "Hasil ujian berhasil disimpan di server!");
+      } else {
+        throw new Error(data.message || "Unknown error dari server");
+      }
+    })
+    .catch(err => {
+      console.error("Error mengirim hasil:", err);
+      retries--;
+      if (retries > 0) {
+        showToast("warning", "Mencoba Ulang", `Gagal mengirim data. Mencoba lagi... (${retries}x)`);
+        setTimeout(attemptSend, 2000);
+      } else {
+        showToast("error", "Sinkronisasi Gagal", "Gagal menyimpan hasil ke server utama setelah beberapa percobaan.");
+      }
+    });
+  };
+
+  attemptSend();
+}
+
+function fetchLeaderboard() {
+  const schoolCode = localStorage.getItem("cbt_school_code") || "default";
+  const lbList = document.getElementById('leaderboard-list');
+
+  // Indikator Loading
+  lbList.innerHTML = '<div style="text-align:center; padding:15px; color:var(--gray-500);">⏳ Mengambil data leaderboard dari server...</div>';
+
+  let retries = 3;
+  const attemptFetch = () => {
+    fetch(`${BACKEND_API_URL}?mode=leaderboard&school=${schoolCode}`)
+      .then(res => res.json())
+      .then(resData => {
+        lbList.innerHTML = '';
+        
+        // Data asli ada di dalam resData.data dari backend kita
+        const data = resData.data || [];
+
+        if (!data || data.length === 0) {
+           lbList.innerHTML = '<div style="text-align:center; padding:15px; color:var(--gray-500);">Belum ada data klasemen dari server.</div>';
+           return;
+        }
+
+        data.forEach((r, idx) => {
+          const isMe = r.nama === state.nama;
+          const timeStr = r.waktu ? `${Math.floor(r.waktu / 60)}m ${r.waktu % 60}s` : '-';
+          
+          lbList.innerHTML += `
+            <div class="lb-row ${isMe ? 'is-me' : ''}">
+              <div class="lb-rank">#${idx + 1}</div>
+              <div class="lb-name">${escHtml(r.nama)}${isMe ? ' (Kamu)' : ''}</div>
+              <div class="lb-score">${r.score || r.skor}</div>
+              <div class="lb-time">⏱️ ${timeStr}</div>
+            </div>
+          `;
+        });
+      })
+      .catch(err => {
+        console.error("Gagal fetch leaderboard backend:", err);
+        retries--;
+        if (retries > 0) {
+          lbList.innerHTML = `<div style="text-align:center; padding:15px; color:var(--amber-500);">⚠️ Gagal memuat. Mencoba ulang... (${retries}x)</div>`;
+          setTimeout(attemptFetch, 2000);
+        } else {
+          lbList.innerHTML = '<div style="text-align:center; padding:15px; color:var(--red-500);">❌ Gagal memuat leaderboard dari server.</div>';
+          showToast("error", "Leaderboard Error", "Gagal memuat leaderboard dari server.");
+        }
+      });
+  };
+
+  attemptFetch();
+}
+// =========================================================================
+// === BACKEND INTEGRATION END ===
+// =========================================================================
 </script>
 </body>
 </html>
