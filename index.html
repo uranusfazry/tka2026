@@ -1237,16 +1237,16 @@ body {
     <!-- FORM DAFTAR -->
     <div id="form-admin-register" class="hidden">
       <div class="form-group">
-        <label for="inp-reg-username">Username Baru</label>
-        <input class="form-input" id="inp-reg-username" type="text" placeholder="Buat username" autocomplete="off" />
+        <label for="inp-register-username">Username Baru</label>
+        <input class="form-input" id="inp-register-username" type="text" placeholder="Buat username" autocomplete="off" />
       </div>
       <div class="form-group">
-        <label for="inp-reg-password">Password Baru</label>
-        <input class="form-input" id="inp-reg-password" type="password" placeholder="Buat password" />
+        <label for="inp-register-password">Password Baru</label>
+        <input class="form-input" id="inp-register-password" type="password" placeholder="Buat password" />
       </div>
       <div class="form-group">
-        <label for="inp-reg-devcode">Kode Akses Developer <span style="color:var(--red-500)">*</span></label>
-        <input class="form-input" id="inp-reg-devcode" type="password" placeholder="Kode dari Developer" />
+        <label for="inp-dev-code">Kode Akses Developer <span style="color:var(--red-500)">*</span></label>
+        <input class="form-input" id="inp-dev-code" type="password" placeholder="Kode dari Developer" />
         <div class="form-hint">Wajib diisi untuk memverifikasi pendaftaran akun guru/admin.</div>
       </div>
       <button class="btn-primary ripple-target" id="btn-admin-register">
@@ -2907,20 +2907,30 @@ function toggleAdminTab(mode) {
 // Fungsi Daftar Guru / Admin Baru (Pake Database Google Script)
 document.getElementById('btn-admin-register')?.addEventListener('click', async () => {
     const btn = document.getElementById('btn-admin-register');
-    const userInp = document.getElementById('inp-reg-username');
-    const passInp = document.getElementById('inp-reg-password');
-    const codeInp = document.getElementById('inp-reg-devcode');
+    const userInp = document.getElementById('inp-register-username');
+    const passInp = document.getElementById('inp-register-password');
+    const codeInp = document.getElementById('inp-dev-code');
 
-    const user = userInp.value.trim();
-    const pass = passInp.value;
-    const code = codeInp.value;
+    const username = userInp.value.trim();
+    const password = passInp.value.trim();
+    const devCode = codeInp.value.trim();
 
-    if (!user || !pass || !code) {
-        showToast('warning', 'Validasi', 'Semua kolom form wajib diisi.');
+    // Validasi individual
+    if (!username) {
+        userInp.classList.add('error', 'shake');
+        showToast('warning', 'Validasi Gagal', 'Username tidak boleh kosong.');
+        setTimeout(() => userInp.classList.remove('error', 'shake'), 500);
         return;
     }
 
-    if (code !== ACCESS_CODE) {
+    if (!password) {
+        passInp.classList.add('error', 'shake');
+        showToast('warning', 'Validasi Gagal', 'Password tidak boleh kosong.');
+        setTimeout(() => passInp.classList.remove('error', 'shake'), 500);
+        return;
+    }
+
+    if (devCode !== ACCESS_CODE) { // ACCESS_CODE is "uranusfazry123"
         codeInp.classList.add('error', 'shake');
         showToast('error', 'Akses Ditolak', 'Kode Akses Developer salah!');
         setTimeout(() => codeInp.classList.remove('error', 'shake'), 500);
@@ -2933,23 +2943,30 @@ document.getElementById('btn-admin-register')?.addEventListener('click', async (
 
     try {
         if (API_URL === "PASTE_APPS_SCRIPT_URL") {
-            // Fallback (Simulasi jika Script URL belum disetel)
             throw new Error("API Google Script belum disetel.");
         }
 
-        const payload = { mode: 'register', username: user, password: pass };
+        // Kirim ke Backend
         const res = await fetch(BACKEND_API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                mode: 'register',
+                username: username,
+                password: password,
+                devCode: devCode
+            })
         });
+        
         const json = await res.json();
 
+        // Handle Response
         if (json.status === 'success') {
-            showToast('success', 'Berhasil', 'Akun Guru/Admin berhasil dibuat. Silakan masuk.');
+            showToast('success', 'Berhasil', 'Akun berhasil dibuat. Silakan login.');
             toggleAdminTab('login');
+            
             // Auto fill form login
-            document.getElementById('inp-admin-username').value = user;
+            document.getElementById('inp-admin-username').value = username;
             document.getElementById('inp-admin-password').value = '';
             
             userInp.value = ''; passInp.value = ''; codeInp.value = '';
@@ -2959,15 +2976,19 @@ document.getElementById('btn-admin-register')?.addEventListener('click', async (
             setTimeout(() => userInp.classList.remove('error', 'shake'), 500);
         }
     } catch (e) {
-        // Fallback jika API belum disetel tapi mau di tes:
-        if(e.message === "API Google Script belum disetel.") {
-            showToast('info', 'Simulasi', 'Database belum disetel. Melanjutkan dengan simulasi penyimpanan.');
+        // Fallback (Simulasi)
+        if (e.message === "API Google Script belum disetel.") {
+            showToast('info', 'Simulasi', 'Database belum disetel. Melanjutkan dengan simulasi.');
             let accounts = JSON.parse(localStorage.getItem('cbt_admin_accounts') || '[]');
-            const generatedTeacherId = "GURU-" + Math.random().toString(36).substr(2, 4).toUpperCase();
-            accounts.push({ username: user, password: pass, teacherId: generatedTeacherId });
-            localStorage.setItem('cbt_admin_accounts', JSON.stringify(accounts));
-            toggleAdminTab('login');
-            document.getElementById('inp-admin-username').value = user;
+            if (accounts.some(a => a.username === username)) {
+                showToast('error', 'Gagal', 'Username sudah terdaftar.');
+            } else {
+                const generatedTeacherId = "GURU-" + Math.random().toString(36).substr(2, 4).toUpperCase();
+                accounts.push({ username: username, password: password, teacherId: generatedTeacherId });
+                localStorage.setItem('cbt_admin_accounts', JSON.stringify(accounts));
+                toggleAdminTab('login');
+                document.getElementById('inp-admin-username').value = username;
+            }
         } else {
             showToast('error', 'Koneksi Gagal', 'Tidak dapat terhubung ke server database.');
         }
