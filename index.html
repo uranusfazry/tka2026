@@ -12,11 +12,11 @@
    ============================ */
 :root {
   /* Palet Warna Profesional & Modern (Navy & Slate) */
-  --blue-900: #0f172a; /* Slate 900 */
-  --blue-800: #1e293b; /* Slate 800 */
-  --blue-700: #334155; /* Slate 700 */
-  --blue-600: #1e3a8a; /* Navy Blue (Primary) */
-  --blue-500: #2c5282; /* Lighter Navy */
+  --blue-900: #0f172a;
+  --blue-800: #1e293b;
+  --blue-700: #334155;
+  --blue-600: #1e3a8a;
+  --blue-500: #2c5282;
   --blue-400: #3b82f6;
   --blue-300: #93c5fd;
   --blue-100: #e2e8f0;
@@ -28,6 +28,7 @@
   --red-500:   #dc2626;
   --red-100:   #fee2e2;
   --red-50:    #fef2f2;
+  --amber-600: #b45309; 
   --amber-500: #d97706;
   --amber-400: #f59e0b;
   --amber-100: #fef3c7;
@@ -110,6 +111,9 @@ body {
   from { opacity: 1; transform: scale(1); }
   to   { opacity: 0; transform: scale(.88); }
 }
+@keyframes spin { 
+  100% { transform: rotate(360deg); } 
+}
 
 .anim-fade  { animation: fadeIn .4s var(--transition) both; }
 .anim-right { animation: slideRight .35s var(--transition) both; }
@@ -130,14 +134,14 @@ body {
 .screen.active { display: flex; }
 
 /* ============================
-   ── LOGIN SCREEN ──
+   ── LOGIN & ADMIN SCREEN ──
    ============================ */
-#screen-login {
+#screen-login, #screen-admin-login {
   min-height: 100vh;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: transparent; /* Menggunakan background body (#F5F7FA) */
+  background: transparent;
   position: relative;
   overflow: hidden;
   padding: 24px;
@@ -218,10 +222,11 @@ body {
   line-height: 1.4;
 }
 
+/* KELAS TOMBOL UTAMA */
 .btn-primary {
   width: 100%;
   padding: 14px;
-  background: var(--blue-600); /* Navy Blue Resmi */
+  background: var(--blue-600);
   color: #fff;
   border: none;
   border-radius: var(--radius);
@@ -232,13 +237,25 @@ body {
   margin-top: 12px;
   position: relative;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: var(--blue-800);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
 }
-.btn-primary:active { transform: translateY(0); }
+.btn-primary:active:not(:disabled) { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
+
+/* KELAS WARNA TOMBOL KHUSUS ADMIN */
+.btn-primary.amber { background: var(--amber-500); }
+.btn-primary.amber:hover:not(:disabled) {
+  background: var(--amber-600);
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
+}
 
 .login-info {
   margin-top: 24px;
@@ -252,6 +269,26 @@ body {
   line-height: 1.5;
 }
 .login-info svg { width:18px;height:18px;flex-shrink:0;margin-top:1px;stroke:var(--gray-500);fill:none;stroke-width:2; }
+
+/* ============================
+   TABS ADMIN CSS (DIPERBAIKI)
+   ============================ */
+.admin-tabs {
+  display: flex; 
+  background: var(--gray-100); 
+  border-radius: 8px; 
+  margin-bottom: 20px; 
+  padding: 4px;
+}
+.admin-tab {
+  flex: 1; padding: 10px; border: 1px solid transparent; background: transparent; border-radius: 6px;
+  font-size: 13.5px; font-weight: 700; color: var(--gray-500); cursor: pointer; transition: all 0.2s;
+  outline: none; /* Menghilangkan border hitam bawaan browser saat difokuskan */
+}
+.admin-tab.active {
+  background: var(--white); color: var(--blue-700); box-shadow: var(--shadow-sm);
+  border-color: var(--gray-200); /* Border halus pengganti hitam */
+}
 
 /* ============================
    ── EXAM SCREEN ──
@@ -893,11 +930,11 @@ body {
    ============================ */
 .modal-overlay {
   position: fixed; inset: 0;
-  background: rgba(0, 0, 0, 0.75); /* Perbaikan: Background overlay solid */
+  background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(8px); 
   -webkit-backdrop-filter: blur(8px);
   display: flex; align-items: center; justify-content: center;
-  z-index: 99999; /* Perbaikan: Z-index sangat tinggi */
+  z-index: 99999;
   padding: 20px;
   opacity: 0;
   pointer-events: none;
@@ -949,7 +986,7 @@ body {
   flex: 1; padding: 14px; border-radius: var(--radius);
   font-size: 14.5px; font-weight: 700; border: none; cursor: pointer;
   transition: all var(--transition);
-  position: relative; overflow: hidden;
+  position: relative overflow: hidden;
 }
 .modal-btn.cancel { background: var(--gray-100); color: var(--gray-700); }
 .modal-btn.cancel:hover { background: var(--gray-200); }
@@ -1033,6 +1070,8 @@ body {
   .topbar-meta { gap: 10px; }
   .student-badge { display: none; }
   .result-stats-row { grid-template-columns: repeat(3,1fr); }
+  
+  .admin-setup-grid { grid-template-columns: 1fr !important; }
 }
 @media (max-width: 600px) {
   .login-card { padding: 32px 22px 28px; }
@@ -1046,19 +1085,87 @@ body {
   .toast-container { bottom: 16px; right: 16px; left: 16px; }
   .toast-box { min-width: 0; width: 100%; }
 }
+
+/* ============================================================
+   === FITUR BARU: ADMIN PANEL CSS START ===
+   ============================================================ */
+#screen-admin-dashboard {
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--gray-100);
+}
+.admin-container {
+  max-width: 1000px; margin: 32px auto; padding: 0 20px 60px; width: 100%;
+}
+.admin-hero {
+  background: linear-gradient(135deg, var(--blue-900), var(--blue-800));
+  border-radius: var(--radius-xl); padding: 32px; color: #fff;
+  display: flex; justify-content: space-between; align-items: center;
+  box-shadow: var(--shadow-md); margin-bottom: 24px;
+}
+.admin-hero-title h2 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+.admin-hero-title p { font-size: 14px; color: var(--blue-300); }
+.admin-stats { display: flex; gap: 16px; }
+.admin-stat-box {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px; padding: 16px 24px; text-align: center;
+}
+.admin-stat-box .val { font-size: 28px; font-weight: 900; }
+.admin-stat-box .lbl { font-size: 12px; color: var(--gray-300); }
+
+.admin-card {
+  background: var(--white); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow); overflow: hidden; margin-bottom: 24px;
+}
+.admin-card-header {
+  padding: 20px 24px; border-bottom: 1px solid var(--gray-200);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.admin-card-header h3 { font-size: 16px; font-weight: 800; color: var(--gray-900); }
+.admin-actions { display: flex; gap: 10px; }
+.btn-action {
+  padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; display: flex; align-items: center; gap: 6px;
+  transition: all var(--transition);
+}
+.btn-refresh { background: var(--blue-50); color: var(--blue-600); border: 1px solid var(--blue-200); }
+.btn-refresh:hover { background: var(--blue-100); }
+.btn-clear { background: var(--red-50); color: var(--red-600); border: 1px solid var(--red-200); }
+.btn-clear:hover { background: var(--red-100); }
+
+.table-wrapper { overflow-x: auto; }
+.admin-table { width: 100%; border-collapse: collapse; text-align: left; }
+.admin-table th {
+  background: var(--gray-50); padding: 14px 20px; font-size: 12px;
+  font-weight: 700; color: var(--gray-500); text-transform: uppercase;
+  letter-spacing: 0.5px; border-bottom: 1px solid var(--gray-200); white-space: nowrap;
+}
+.admin-table td {
+  padding: 16px 20px; font-size: 14px; color: var(--gray-800);
+  border-bottom: 1px solid var(--gray-100); font-weight: 500; white-space: nowrap;
+}
+.admin-table tr:hover td { background: var(--gray-50); }
+.badge-score {
+  background: var(--green-100); color: var(--green-700); padding: 4px 10px;
+  border-radius: 6px; font-weight: 800; font-size: 13px;
+}
+.badge-time { font-size: 13px; color: var(--gray-500); }
+/* ============================================================
+   === FITUR BARU: ADMIN PANEL CSS END ===
+   ============================================================ */
 </style>
 <body>
 
 <!-- ==============================
-     SCREEN 1: LOGIN
+     SCREEN 1: LOGIN SISWA
      ============================== -->
-<div id="screen-login" class="screen active">
-  <div class="login-card anim-fade">
+<div id="screen-login" class="screen">
+  <div class="login-card anim-fade" id="login-card-inner">
     <div class="login-logo school-logo">
       <img src="https://i.imghippo.com/files/KBnG7926xY.webp" alt="Logo" />
     </div>
     <div class="login-title">Simulasi TKA</div>
-    <div class="login-sub"><span class="school-name">MI Panatasan</span> &nbsp;·&nbsp; Kelas 6</div>
+    <div class="login-sub"><span class="school-name">Sistem CBT</span> &nbsp;·&nbsp; Kelas 6</div>
 
     <div class="form-group">
       <label for="inp-nama">Nama Lengkap</label>
@@ -1074,6 +1181,7 @@ body {
       </select>
       <div class="form-hint">Pilihan ini mempengaruhi distribusi soal yang akan ditampilkan.</div>
     </div>
+    
     <button class="btn-primary ripple-target" id="btn-login">
       Mulai Ujian &rarr;
     </button>
@@ -1083,10 +1191,196 @@ body {
       <div>Pastikan nama diisi dengan benar. Sistem akan mengacak soal setiap ujian dimulai. Ujian berlangsung selama <strong>60 menit</strong>.</div>
     </div>
     
-    <!-- Tombol Reset Sekolah -->
-    <button id="btn-reset-school" style="margin-top: 16px; width: 100%; padding: 10px; background: transparent; border: 1px dashed var(--gray-300); color: var(--gray-500); border-radius: var(--radius); cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s;">⚙️ Reset Pengaturan Sekolah</button>
+    <!-- === FITUR BARU: TOMBOL LOGIN ADMIN / GURU (DENGAN SPA JS) === -->
+    <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--gray-200);">
+      <button onclick="showScreen('screen-admin-login')" style="background:none; border:none; color:var(--blue-600); font-weight:700; font-size:13px; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s;">
+        <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        Masuk sebagai Guru / Admin &rarr;
+      </button>
+    </div>
+    <!-- ============================================ -->
   </div>
 </div>
+
+<!-- ============================================================
+     === FITUR BARU: ADMIN LOGIN & REGISTER SCREEN START ===
+     ============================================================ -->
+<div id="screen-admin-login" class="screen active">
+  <div class="login-card anim-fade">
+    <div class="login-logo school-logo">
+      <img src="https://i.imghippo.com/files/KBnG7926xY.webp" alt="Logo" />
+    </div>
+    <div class="login-title" style="color: var(--amber-600);">Admin Akses</div>
+    <div class="login-sub">Panel Pengelolaan CBT</div>
+
+    <!-- TABS LOGIN & DAFTAR -->
+    <div class="admin-tabs">
+      <button id="tab-login" class="admin-tab active" onclick="toggleAdminTab('login')">Masuk</button>
+      <button id="tab-register" class="admin-tab" onclick="toggleAdminTab('register')">Daftar Guru</button>
+    </div>
+
+    <!-- FORM LOGIN -->
+    <div id="form-admin-login">
+      <div class="form-group">
+        <label for="inp-admin-username">Username Admin / Guru</label>
+        <input class="form-input" id="inp-admin-username" type="text" placeholder="Username" autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label for="inp-admin-password">Password</label>
+        <input class="form-input" id="inp-admin-password" type="password" placeholder="Password" />
+      </div>
+      <button class="btn-primary amber ripple-target" id="btn-admin-login">
+        Masuk Dashboard
+      </button>
+    </div>
+
+    <!-- FORM DAFTAR -->
+    <div id="form-admin-register" class="hidden">
+      <div class="form-group">
+        <label for="inp-reg-username">Username Baru</label>
+        <input class="form-input" id="inp-reg-username" type="text" placeholder="Buat username" autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label for="inp-reg-password">Password Baru</label>
+        <input class="form-input" id="inp-reg-password" type="password" placeholder="Buat password" />
+      </div>
+      <div class="form-group">
+        <label for="inp-reg-devcode">Kode Akses Developer <span style="color:var(--red-500)">*</span></label>
+        <input class="form-input" id="inp-reg-devcode" type="password" placeholder="Kode dari Developer" />
+        <div class="form-hint">Wajib diisi untuk memverifikasi pendaftaran akun guru/admin.</div>
+      </div>
+      <button class="btn-primary ripple-target" id="btn-admin-register">
+        Buat Akun & Masuk
+      </button>
+    </div>
+    
+    <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--gray-200);">
+      <!-- Pindah kembali menggunakan JS tanpa reload -->
+      <button onclick="showScreen('screen-login')" style="background:none; border:none; color:var(--gray-500); font-weight:600; font-size:13px; cursor:pointer; text-decoration:none; transition:all 0.2s;">
+        &larr; Kembali ke Login Siswa
+      </button>
+    </div>
+  </div>
+</div>
+<!-- ============================================================
+     === FITUR BARU: ADMIN LOGIN & REGISTER SCREEN END ===
+     ============================================================ -->
+
+<!-- ============================================================
+     === FITUR BARU: ADMIN DASHBOARD SCREEN START ===
+     ============================================================ -->
+<div id="screen-admin-dashboard" class="screen">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-brand">
+        <div class="topbar-logo school-logo">
+          <img src="https://i.imghippo.com/files/KBnG7926xY.webp" alt="Logo" />
+        </div>
+        <div class="topbar-title">
+          Dashboard Guru
+          <span class="school-name">MI Panatasan</span>
+        </div>
+      </div>
+      <button class="btn-action btn-refresh ripple-target" onclick="logoutAdmin()">Keluar Panel</button>
+    </div>
+  </header>
+
+  <div class="admin-container anim-fade">
+    
+    <!-- === BAGIAN SETUP SEKOLAH & GENERATE LINK === -->
+    <div class="admin-card">
+      <div class="admin-card-header" style="background: var(--gray-50);">
+        <h3>🏫 Pengaturan Sekolah & Link Akses Siswa</h3>
+      </div>
+      <div style="padding: 24px;">
+        <div class="admin-setup-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+          <!-- Kiri: Form Setup -->
+          <div>
+            <div class="form-group">
+              <label>Nama Sekolah / Kelas</label>
+              <input type="text" id="admin-setup-school" class="form-input" placeholder="Contoh: SDN 1 Jakarta Kelas 6A">
+            </div>
+            <div class="form-group">
+              <label>Link Logo (Opsional)</label>
+              <input type="text" id="admin-setup-logo" class="form-input" placeholder="Masukkan link gambar dari ImgHippo">
+              <div style="font-size: 11px; color: var(--gray-500); margin-top: 4px;">Kosongkan jika ingin menggunakan logo default.</div>
+            </div>
+            <button class="btn-primary ripple-target" id="btn-admin-save-setup" style="margin-top: 0;">Simpan & Buat Ruangan Ujian</button>
+          </div>
+          <!-- Kanan: Link Akses -->
+          <div>
+            <div class="form-group">
+              <label>ID Guru (Akses Ruangan)</label>
+              <input type="text" id="admin-setup-teacher-id" class="form-input" readonly style="background: var(--gray-100); font-weight: 700; color: var(--blue-700); letter-spacing: 1px;">
+            </div>
+            <div class="form-group">
+              <label>Link Direct Login Siswa</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="admin-setup-link" class="form-input" readonly style="background: var(--gray-100); font-size: 12px;">
+                <button class="btn-action btn-refresh ripple-target" id="btn-copy-link" style="flex-shrink: 0; padding: 10px 16px;">📋 Copy</button>
+              </div>
+              <div class="form-hint" style="color: var(--amber-600); font-weight: 500;">Sebarkan link di atas agar data siswa masuk tepat ke dashboard Anda!</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Menu Guru Navigasi Tambahan -->
+        <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--gray-200); display: flex; gap: 12px; flex-wrap: wrap;">
+          <button class="btn-action ripple-target" style="background: var(--blue-50); color: var(--blue-700);" onclick="showToast('info','Fitur Bank Soal','Modul Bank Soal sedang dalam pengembangan.')">📚 Lihat Bank Soal</button>
+          <button class="btn-action ripple-target" style="background: var(--green-50); color: var(--green-700);" onclick="showToast('info','Kunci Jawaban','Modul Kunci Jawaban sedang dalam pengembangan.')">📝 Lihat Kunci Jawaban</button>
+          <button class="btn-action ripple-target" style="background: var(--amber-50); color: var(--amber-700);" onclick="document.getElementById('btn-admin-refresh').click()">📊 Pantau Nilai Siswa (Tabel di Bawah)</button>
+        </div>
+      </div>
+    </div>
+    <!-- ============================================= -->
+
+    <div class="admin-hero" style="margin-top: 32px;">
+      <div class="admin-hero-title">
+        <h2>Panel Rekapitulasi Ujian</h2>
+        <p>Data tersinkronisasi langsung dari Google Sheets Backend.</p>
+      </div>
+      <div class="admin-stats">
+        <div class="admin-stat-box">
+          <div class="val" id="total-siswa">0</div>
+          <div class="lbl">Siswa Selesai</div>
+        </div>
+        <div class="admin-stat-box">
+          <div class="val" id="avg-score">0</div>
+          <div class="lbl">Rata-rata Skor</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <h3>📊 Leaderboard & Data Lengkap Ruangan Ini</h3>
+        <div class="admin-actions">
+          <button class="btn-action btn-refresh ripple-target" id="btn-admin-refresh">🔄 Refresh Data</button>
+          <button class="btn-action btn-clear ripple-target" id="btn-admin-clear">🗑️ Kosongkan Data</button>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th style="width: 50px;">Rank</th>
+              <th>Nama Siswa</th>
+              <th>Skor Akhir</th>
+              <th>Waktu Pengerjaan</th>
+              <th>Tanggal Disubmit</th>
+            </tr>
+          </thead>
+          <tbody id="admin-table">
+            <tr><td colspan="5" style="text-align:center; padding:40px; color:var(--gray-500);">Silakan refresh data untuk memuat...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ============================================================
+     === FITUR BARU: ADMIN DASHBOARD SCREEN END ===
+     ============================================================ -->
 
 <!-- ==============================
      SCREEN 2: EXAM
@@ -1100,7 +1394,7 @@ body {
           <img src="https://i.imghippo.com/files/KBnG7926xY.webp" alt="Logo" />
         </div>
         <div class="topbar-title">
-          Simulasi TKA <span class="school-name">MI Panatasan</span>
+          Simulasi TKA <span class="school-name">Sistem CBT</span>
           <span>Tes Kompetensi Akademik</span>
         </div>
       </div>
@@ -1196,7 +1490,7 @@ body {
   <div class="result-topbar">
     <div>
       <h2>Hasil Ujian – Simulasi TKA</h2>
-      <span><span class="school-name">MI Panatasan</span> &nbsp;·&nbsp; Kelas 6</span>
+      <span><span class="school-name">Sistem CBT</span> &nbsp;·&nbsp; Kelas 6</span>
     </div>
   </div>
   <div class="result-container anim-fade">
@@ -1235,16 +1529,6 @@ body {
 
     </div>
 
-    <!-- FITUR BARU: Leaderboard -->
-    <div class="leaderboard-container">
-      <div class="leaderboard-header">
-        <h3>🏆 Top 10 Leaderboard CBT</h3>
-      </div>
-      <div id="leaderboard-list">
-        <!-- LB Rows injected here -->
-      </div>
-    </div>
-
     <div class="review-section">
       <div class="review-section-header">
         <h3>📝 Pembahasan – Pilihan Ganda</h3>
@@ -1275,86 +1559,38 @@ body {
 <div id="toast-container" class="toast-container"></div>
 
 <script>
-/* ============================================================
-   🔥 UPGRADE: MULTI SCHOOL & BACKEND SYSTEM
-   ============================================================ */
 const API_URL = "https://script.google.com/macros/s/AKfycbxJtx8Vn_1nwv1_6LIOo8DJDcGrIaGEoyNC3TMf4i5V80_nYnzQ4zvYSqI-dTh6KZVO/exec";
+const BACKEND_API_URL = API_URL;
 const DEFAULT_LOGO = "https://i.imghippo.com/files/KBnG7926xY.webp";
 
-function initSchoolSetup() {
-  const savedName = localStorage.getItem("cbt_school_name");
-  
-  if (!savedName) {
-    let tempLogoBase64 = "";
+// ==============================
+// 🔧 CONFIG & ADMIN CREDENTIALS
+// ==============================
+const ADMIN_USERNAME = "admin";
+const ADMIN_PASSWORD = "uranusfazry123";
+const ACCESS_CODE = "uranusfazry123"; // Kode akses developer wajib untuk mendaftar akun guru
 
-    showCustomModal({
-      type: 'info',
-      title: 'Pengaturan Sekolah',
-      message: 'Silakan atur identitas sekolah untuk sesi ujian ini.',
-      htmlContent: `
-        <div style="text-align: left; margin-top: 12px;">
-          <div class="form-group" style="margin-bottom: 12px;">
-            <label style="display: block; font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px;">Nama Sekolah (Wajib)</label>
-            <input type="text" id="setup-school-name" class="form-input" placeholder="Misal: SDN 1 Jakarta" style="width: 100%; padding: 10px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 14px;">
-          </div>
-          <div class="form-group">
-            <label style="display: block; font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px;">Upload Logo (Opsional)</label>
-            <input type="file" id="setup-school-logo" accept="image/*" style="width: 100%; padding: 8px; border: 1px solid var(--gray-300); border-radius: var(--radius); font-size: 13px; background: var(--gray-50);">
-            <div style="font-size: 11px; color: var(--gray-500); margin-top: 4px;">Kosongkan untuk menggunakan logo default. Maks 1MB.</div>
-          </div>
-        </div>
-      `,
-      confirmText: 'Simpan & Mulai',
-      showCancel: false,
-      onConfirm: () => {
-        const nameInput = document.getElementById('setup-school-name').value.trim();
-        if (!nameInput) {
-          showToast("error", "Validasi Gagal", "Nama sekolah wajib diisi!");
-          setTimeout(() => initSchoolSetup(), 500); // Tampilkan ulang jika kosong
-          return;
-        }
+// ==============================
+// 🌐 ROLE SYSTEM (URL PARAM)
+// ==============================
+const urlParams = new URLSearchParams(window.location.search);
+const role = urlParams.get("role");
+const namaFromURL = urlParams.get("nama");
+const paramTeacher = urlParams.get("teacher");
 
-        // Simpan data universal
-        localStorage.setItem("cbt_school_name", nameInput);
-        // Buat ID unik untuk backend klasemen berdasarkan nama (spasi hilang)
-        localStorage.setItem("cbt_school_code", nameInput.toLowerCase().replace(/[^a-z0-9]/g, ''));
-        
-        if (tempLogoBase64) {
-          localStorage.setItem("cbt_school_logo", tempLogoBase64);
-        }
-        
-        applySchoolIdentity();
-        showToast("success", "Berhasil", "Identitas sekolah telah diterapkan.");
-      }
-    });
+let isAutoLoginBypass = false;
+let isAdminLoggedIn = false;
 
-    // Handle file upload preview secara asinkron
-    setTimeout(() => {
-      const fileInput = document.getElementById('setup-school-logo');
-      if(fileInput) {
-        fileInput.addEventListener('change', function(e) {
-          const file = e.target.files[0];
-          if (!file) return;
-          if (file.size > 1024 * 1024) { 
-            showToast("error", "File Terlalu Besar", "Ukuran logo maksimal 1MB.");
-            this.value = '';
-            return;
-          }
-          const reader = new FileReader();
-          reader.onload = function(event) {
-            tempLogoBase64 = event.target.result;
-          };
-          reader.readAsDataURL(file);
-        });
-      }
-    }, 100);
-  } else {
-    applySchoolIdentity();
-  }
+/* ============================================================
+   FUNGSI IDENTITAS SEKOLAH & APLIKASI
+   ============================================================ */
+// Simpan teacher parameter dari URL untuk digunakan filtering hasil siswa (Isolasi Guru)
+if (paramTeacher) {
+  localStorage.setItem("cbt_teacher_id", paramTeacher);
 }
 
 function applySchoolIdentity() {
-  const schoolName = localStorage.getItem("cbt_school_name") || "Nama Sekolah";
+  const schoolName = localStorage.getItem("cbt_school_name") || "Sistem CBT";
   const schoolLogo = localStorage.getItem("cbt_school_logo") || DEFAULT_LOGO;
   
   // Mengubah title webpage
@@ -1365,22 +1601,18 @@ function applySchoolIdentity() {
     el.textContent = schoolName;
   });
 
-  // 🔥 PERBAIKAN: Ganti semua logo secara global dengan filter ketat
   document.querySelectorAll('img').forEach(img => {
-    // Periksa class wrapper atau jika src masih menggunakan URL logo lama
     if (img.closest('.school-logo') || img.src.includes('fjL7781Prg.webp') || img.src.includes('kg7630LM.png')) {
       img.src = schoolLogo;
-      img.classList.add('logo-updated'); // Class tambahan untuk styling
+      img.classList.add('logo-updated');
     }
   });
 
-  // Ganti Favicon secara otomatis jika sudah di-setup
   const favicon = document.querySelector('link[rel="icon"]');
   if (favicon && schoolLogo !== DEFAULT_LOGO) {
       favicon.href = schoolLogo;
   }
 
-  // 🔥 PERBAIKAN: Hilangkan background image logo (ghost/blur issue)
   document.querySelectorAll('*').forEach(el => {
     try {
       const style = window.getComputedStyle(el);
@@ -1393,61 +1625,49 @@ function applySchoolIdentity() {
 
 function sendResultToBackend(finalScore) {
   const schoolCode = localStorage.getItem("cbt_school_code") || "default";
-  
-  // Cegah error jika API belum diset
-  if (API_URL === "PASTE_APPS_SCRIPT_URL") return; 
+  const teacherId = localStorage.getItem("cbt_teacher_id") || "default_teacher";
+  const timeSpent = (60 * 60) - state.timer;
 
-  fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      nama: state.nama,
-      score: finalScore,
-      school: schoolCode
+  const payload = {
+    nama: state.nama,
+    score: finalScore,
+    school: schoolCode,
+    teacher: teacherId, // 🔥 Penting untuk memfilter Dashboard Guru
+    waktu: timeSpent
+  };
+
+  showToast("info", "Menyimpan Hasil", "Sedang mengirim data ke server...");
+
+  let retries = 3;
+  const attemptSend = () => {
+    if (API_URL === "PASTE_APPS_SCRIPT_URL") return; 
+    
+    fetch(BACKEND_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
     })
-  }).catch(err => {
-    console.error("Gagal sinkron data hasil ujian:", err);
-    showToast("error", "Sinkronisasi Gagal", "Gagal menyimpan hasil ke server utama.");
-  });
-}
-
-function fetchLeaderboard() {
-  const schoolCode = localStorage.getItem("cbt_school_code") || "default";
-  const lbList = document.getElementById('leaderboard-list');
-
-  if (API_URL === "PASTE_APPS_SCRIPT_URL") {
-     // Gunakan UI dari localstorage (sistem lama) jika API_URL blm ada
-     return;
-  }
-
-  fetch(API_URL + "?mode=leaderboard&school=" + schoolCode)
     .then(res => res.json())
     .then(data => {
-      lbList.innerHTML = '';
-      
-      if (!data || data.length === 0) {
-         lbList.innerHTML = '<div style="text-align:center; padding:15px; color:var(--gray-500);">Belum ada data klamesmen dari server.</div>';
-         return;
+      if (data.status === 'success') {
+        showToast("success", "Tersimpan", "Hasil ujian berhasil disimpan di server!");
+      } else {
+        throw new Error(data.message || "Unknown error dari server");
       }
-
-      data.forEach((r, idx) => {
-        const isMe = r.nama === state.nama;
-        const timeStr = r.waktu ? `${Math.floor(r.waktu / 60)}m ${r.waktu % 60}s` : '-';
-        
-        lbList.innerHTML += `
-          <div class="lb-row ${isMe ? 'is-me' : ''}">
-            <div class="lb-rank">#${idx + 1}</div>
-            <div class="lb-name">${escHtml(r.nama)}${isMe ? ' (Kamu)' : ''}</div>
-            <div class="lb-score">${r.score || r.skor}</div>
-            <div class="lb-time">⏱️ ${timeStr}</div>
-          </div>
-        `;
-      });
     })
     .catch(err => {
-      console.error("Gagal fetch leaderboard backend:", err);
-      showToast("error", "Leaderboard Error", "Gagal memuat leaderboard dari server.");
+      console.error("Error mengirim hasil:", err);
+      retries--;
+      if (retries > 0) {
+        showToast("warning", "Mencoba Ulang", `Gagal mengirim data. Mencoba lagi... (${retries}x)`);
+        setTimeout(attemptSend, 2000);
+      } else {
+        showToast("error", "Sinkronisasi Gagal", "Gagal menyimpan hasil ke server utama setelah beberapa percobaan.");
+      }
     });
+  };
+
+  attemptSend();
 }
 
 
@@ -1651,7 +1871,6 @@ function saveSession() {
     current: state.current
   };
   localStorage.setItem("cbt_session_" + state.nama, JSON.stringify(sessionData));
-  localStorage.setItem("cbt_last_user", state.nama);
 }
 
 let autoSaveTimeout;
@@ -1714,26 +1933,75 @@ function resumeExam() {
    ============================================================ */
 const $ = id => document.getElementById(id);
 
+// ==============================
+// 🔒 PROTEKSI ADMIN
+// ==============================
+function checkAdminAccess() {
+  const isLogin = sessionStorage.getItem("adminLogin");
+  if (!isLogin) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $('screen-admin-login').classList.add('active');
+    return false;
+  }
+  return true;
+}
+
+function logoutAdmin() {
+    sessionStorage.removeItem("adminLogin");
+    sessionStorage.removeItem("activeTeacherId");
+    isAdminLoggedIn = false;
+    window.location.href = window.location.pathname; // Kembali ke root yang defaultnya akan ke Admin Login
+}
+
+// ⚠️ FITUR 8: PROTEKSI ADMIN DASHBOARD (Mencegah Bypass)
 function showScreen(id) {
+  if (id === 'screen-admin-dashboard') {
+    if (!checkAdminAccess()) {
+      showToast('error', 'Akses Ditolak', 'Silakan login sebagai guru/admin terlebih dahulu.');
+      return;
+    }
+  }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   $(id).classList.add('active');
 }
 
 /* ============================================================
-   LOGIN
+   === FITUR 1, 3, 9: LOGIKA LOGIN SISWA PRO ===
    ============================================================ */
 $('btn-login').addEventListener('click', () => {
+  const btn = $('btn-login');
+  const oriText = btn.innerHTML;
+  
   const nama  = $('inp-nama').value.trim();
   const materi = $('inp-materi').value;
   let ok = true;
 
-  if (!nama)  { $('inp-nama').classList.add('error');  $('err-nama').classList.add('show');  ok = false; }
-  else        { $('inp-nama').classList.remove('error'); $('err-nama').classList.remove('show'); }
+  // UX Loading Spinner
+  btn.disabled = true;
+  btn.innerHTML = `<svg style="animation:spin 1s linear infinite;width:18px;height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Memproses...`;
 
-  if (!ok) return;
+  // Reset pesan error
+  $('inp-nama').classList.remove('error'); $('err-nama').classList.remove('show');
 
+  // VALIDASI NAMA
+  if (!nama || nama.length < 3)  { 
+    $('inp-nama').classList.add('error');  
+    $('err-nama').textContent = 'Nama minimal 3 karakter';
+    $('err-nama').classList.add('show');  
+    ok = false; 
+  }
+
+  if (!ok) {
+    // Animasi Shake dengan Timeout
+    setTimeout(() => { btn.innerHTML = oriText; btn.disabled = false; }, 400);
+    showToast('error', 'Validasi Gagal', 'Silakan periksa kembali isian form Anda.');
+    return;
+  }
+
+  // SIMPAN DATA & Resume Session / Mulai Baru Logic
   if (loadSession(nama)) {
     showToast('success', 'Melanjutkan Sesi', 'Data ujianmu berhasil dipulihkan.');
+    btn.innerHTML = oriText; btn.disabled = false;
     resumeExam();
   } else {
     state.nama  = nama;
@@ -1743,7 +2011,13 @@ $('btn-login').addEventListener('click', () => {
     state.timer   = 60 * 60;
     state.warnShown = false;
     state.submitted = false;
+    
+    // Remember user di localStorage
+    localStorage.setItem('cbt_last_user', nama);
+    localStorage.setItem('cbt_nama', nama);
+    
     startExam();
+    btn.innerHTML = oriText; btn.disabled = false;
   }
 });
 
@@ -2337,35 +2611,15 @@ function showResult() {
   }
 
   const timeSpent = (60 * 60) - state.timer; 
+  // Menyimpan fallback ke localstorage lokal browser
   let resultsArr = JSON.parse(localStorage.getItem('cbt_results') || '[]');
   resultsArr.push({ nama: state.nama, skor: finalWeightedScore, waktu: timeSpent, ts: Date.now() });
-  
   resultsArr.sort((a, b) => b.skor - a.skor || a.waktu - b.waktu);
   resultsArr = resultsArr.slice(0, 10);
   localStorage.setItem('cbt_results', JSON.stringify(resultsArr));
 
-  // Render UI lokal terlebih dahulu (sebagai fallback cepat)
-  const lbList = $('leaderboard-list');
-  lbList.innerHTML = '';
-  resultsArr.forEach((r, idx) => {
-    const isMe = r.ts === resultsArr.find(mr => mr.nama === state.nama && mr.skor === finalWeightedScore)?.ts;
-    const mins = Math.floor(r.waktu / 60);
-    const secs = r.waktu % 60;
-    const timeStr = `${mins}m ${secs}s`;
-    
-    lbList.innerHTML += `
-      <div class="lb-row ${isMe ? 'is-me' : ''}">
-        <div class="lb-rank">#${idx + 1}</div>
-        <div class="lb-name">${escHtml(r.nama)}${isMe ? ' (Kamu)' : ''}</div>
-        <div class="lb-score">${r.skor}</div>
-        <div class="lb-time">⏱️ ${timeStr}</div>
-      </div>
-    `;
-  });
-
-  // 🔥 TRIGGER BACKEND SYNC & REAL LEADERBOARD FETCH OVERWRITE
+  // 🔥 TRIGGER BACKEND SYNC 
   sendResultToBackend(finalWeightedScore);
-  fetchLeaderboard();
 
   const revPG = $('review-pg');
   revPG.innerHTML = '';
@@ -2488,7 +2742,7 @@ window.addEventListener('keydown', function(e) {
 });
 
 window.addEventListener('beforeunload', e => {
-  if (!state.submitted && state.nama) {
+  if (!state.submitted && state.nama && document.getElementById('screen-exam').classList.contains('active')) {
     e.preventDefault();
     e.returnValue = ''; 
   }
@@ -2512,165 +2766,461 @@ window.addEventListener('popstate', (e) => {
   }
 });
 
+// === FITUR BARU: AUTO LOGIN KHUSUS SISWA (Smooth Transition) ===
+function autoStartSiswaSession(namaSiswa) {
+    isAutoLoginBypass = true;
+    document.getElementById('inp-nama').value = namaSiswa;
+    
+    const cardInner = document.getElementById('login-card-inner');
+    const oriHTML = cardInner.innerHTML;
+    
+    cardInner.innerHTML = `
+      <div style="text-align:center; padding:40px 10px;">
+        <svg style="animation: spin 1s linear infinite; width:48px; height:48px; color:var(--blue-500); margin-bottom:16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <h3 style="font-size:20px; font-weight:800; color:var(--gray-900);">Halo, ${escHtml(namaSiswa)}!</h3>
+        <p style="color:var(--gray-500); font-size:14px; margin-top:8px;">Sedang mengotomatisasi ruangan ujianmu...</p>
+      </div>
+    `;
+
+    setTimeout(() => {
+        cardInner.innerHTML = oriHTML;
+        state.nama = namaSiswa;
+        state.materi = 'Seimbang'; 
+        state.answers = {};
+        state.current = 0;
+        state.timer = 60 * 60;
+        state.warnShown = false;
+        state.submitted = false;
+        startExam();
+    }, 1500);
+}
+
 /* ============================================================
-   INIT & SESSION CHECK SAAT HALAMAN DIBUKA
+   INIT & SESSION CHECK SAAT HALAMAN DIBUKA (ROUTING)
    ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. Eksekusi Inisialisasi Sekolah Terlebih Dahulu
-  initSchoolSetup();
+  applySchoolIdentity();
 
-  // Tambahkan event listener untuk tombol reset sekolah
+  // Reset Button Logic
   const btnReset = document.getElementById('btn-reset-school');
   if (btnReset) {
     btnReset.addEventListener('click', () => {
       showCustomModal({
         type: 'warning',
         title: 'Reset Pengaturan?',
-        message: 'Semua identitas sekolah dan progres ujian akan dihapus. Lanjutkan?',
+        message: 'Semua identitas sekolah, ruangan akses dan progres ujian akan dihapus. Lanjutkan?',
         confirmText: 'Ya, Reset',
         cancelText: 'Batal',
         onConfirm: () => {
           localStorage.clear();
-          window.location.reload();
+          window.location.href = window.location.pathname;
         }
       });
     });
   }
 
-  // 2. Eksekusi Autentikasi / Cek Session Lama
-  const lastUser = localStorage.getItem('cbt_last_user');
-  
-  if (lastUser && localStorage.getItem('cbt_session_' + lastUser)) {
-    showCustomModal({
-      type: 'info',
-      title: 'Sesi Ujian Ditemukan',
-      message: `Sistem menemukan ujian yang belum selesai atas nama <strong>${lastUser}</strong>. Lanjutkan progres kamu atau mulai dari awal?`,
-      confirmText: 'Lanjutkan',
-      cancelText: 'Mulai Ulang',
-      onConfirm: () => {
-        if (loadSession(lastUser)) {
-          resumeExam();
-          showToast('success', 'Sesi Dipulihkan', 'Selamat melanjutkan ujian.');
-        } else {
+  // ==========================================
+  // 🎯 LOGIKA UTAMA ROUTING (DEFAULT GURU)
+  // ==========================================
+  if (role === 'siswa') {
+    // === 🎓 FLOW SISWA ===
+    
+    // 1. Cek Auto Login via URL Link
+    if (namaFromURL && paramTeacher) {
+        autoStartSiswaSession(namaFromURL);
+        return;
+    }
+
+    // 2. Cek Resume Ujian (Sesi Tertinggal)
+    const lastUser = localStorage.getItem('cbt_last_user');
+    if (lastUser && localStorage.getItem('cbt_session_' + lastUser)) {
+      showCustomModal({
+        type: 'info',
+        title: 'Sesi Ujian Ditemukan',
+        message: `Sistem menemukan ujian yang belum selesai atas nama <strong>${lastUser}</strong>. Lanjutkan progres kamu atau mulai dari awal?`,
+        confirmText: 'Lanjutkan Ujian',
+        cancelText: 'Mulai Ulang',
+        onConfirm: () => {
+          if (loadSession(lastUser)) {
+            resumeExam();
+            showToast('success', 'Sesi Dipulihkan', 'Selamat melanjutkan ujian.');
+          } else {
+            showScreen('screen-login');
+          }
+        },
+        onCancel: () => {
+          clearSession(lastUser);
           showScreen('screen-login');
+          document.getElementById('inp-nama').value = lastUser; // Remember user
+          showToast('warning', 'Sesi Dihapus', 'Sesi ujian lama dibuang. Silakan mulai ulang.');
         }
-      },
-      onCancel: () => {
-        clearSession(lastUser);
-        showScreen('screen-login');
-        showToast('warning', 'Sesi Dihapus', 'Silakan masukkan nama baru.');
-      }
-    });
+      });
+    } else {
+      // 3. Tampilkan halaman login siswa normal
+      if (lastUser) document.getElementById('inp-nama').value = lastUser;
+      showScreen('screen-login');
+    }
+
   } else {
-    showScreen('screen-login');
+    // === 👨‍🏫 FLOW GURU / ADMIN (DEFAULT) ===
+    const isLogin = sessionStorage.getItem("adminLogin");
+    
+    if (isLogin === "true") {
+      // Jika sudah login, langsung ke dashboard
+      showScreen('screen-admin-dashboard');
+      initAdminDashboardSetup(); 
+      loadAdminData(); 
+    } else {
+      // Default ke login admin
+      showScreen('screen-admin-login');
+    }
   }
 });
 
+
 // =========================================================================
-// === BACKEND INTEGRATION START ===
+// === FITUR BARU: ADMIN LOGIC SCRIPT START ===
 // =========================================================================
-const BACKEND_API_URL = "https://script.google.com/macros/s/AKfycbxJtx8Vn_1nwv1_6LIOo8DJDcGrIaGEoyNC3TMf4i5V80_nYnzQ4zvYSqI-dTh6KZVO/exec";
 
-// Kita tidak menghapus fungsi lama, namun MENGGANTIKAN-nya di bawah sini 
-// karena sistem JavaScript "Hoisting" akan menjalankan versi terbaru ini.
+// FUNGSI TOGGLE TAB ADMIN (LOGIN VS DAFTAR)
+function toggleAdminTab(mode) {
+    const formLogin = document.getElementById('form-admin-login');
+    const formReg = document.getElementById('form-admin-register');
+    const tabLogin = document.getElementById('tab-login');
+    const tabReg = document.getElementById('tab-register');
 
-function sendResultToBackend(finalScore) {
-  const schoolCode = localStorage.getItem("cbt_school_code") || "default";
-  const timeSpent = (60 * 60) - state.timer; // Kalkulasi ulang waktu
+    if (mode === 'login') {
+        formLogin.classList.remove('hidden');
+        formReg.classList.add('hidden');
+        tabLogin.classList.add('active');
+        tabReg.classList.remove('active');
+    } else {
+        formLogin.classList.add('hidden');
+        formReg.classList.remove('hidden');
+        tabLogin.classList.remove('active');
+        tabReg.classList.add('active');
+    }
+}
 
-  const payload = {
-    nama: state.nama,
-    score: finalScore,
-    school: schoolCode,
-    waktu: timeSpent
-  };
+// Fungsi Daftar Guru / Admin Baru
+document.getElementById('btn-admin-register')?.addEventListener('click', () => {
+    const userInp = document.getElementById('inp-reg-username');
+    const passInp = document.getElementById('inp-reg-password');
+    const codeInp = document.getElementById('inp-reg-devcode');
 
-  showToast("info", "Menyimpan Hasil", "Sedang mengirim data ke server...");
+    const user = userInp.value.trim();
+    const pass = passInp.value;
+    const code = codeInp.value;
 
-  let retries = 3;
-  const attemptSend = () => {
-    // text/plain digunakan agar GAS tidak error akibat sistem keamanan CORS
-    fetch(BACKEND_API_URL, {
-      method: "POST",
+    if (!user || !pass || !code) {
+        showToast('warning', 'Validasi', 'Semua kolom form wajib diisi.');
+        return;
+    }
+
+    if (code !== ACCESS_CODE) {
+        codeInp.classList.add('error', 'shake');
+        showToast('error', 'Akses Ditolak', 'Kode Akses Developer salah!');
+        setTimeout(() => codeInp.classList.remove('error', 'shake'), 500);
+        return;
+    }
+
+    let accounts = JSON.parse(localStorage.getItem('cbt_admin_accounts') || '[]');
+    
+    if (accounts.some(a => a.username === user) || user === ADMIN_USERNAME) {
+        userInp.classList.add('error');
+        showToast('error', 'Gagal', 'Username sudah terdaftar.');
+        setTimeout(() => userInp.classList.remove('error'), 1000);
+        return;
+    }
+
+    // Auto Generate Teacher ID: GURU-XXXX
+    const generatedTeacherId = "GURU-" + Math.random().toString(36).substr(2, 4).toUpperCase();
+    
+    accounts.push({ username: user, password: pass, teacherId: generatedTeacherId });
+    localStorage.setItem('cbt_admin_accounts', JSON.stringify(accounts));
+
+    showToast('success', 'Berhasil', 'Akun Guru/Admin berhasil dibuat. Silakan login.');
+    toggleAdminTab('login');
+    
+    // Auto fill login
+    document.getElementById('inp-admin-username').value = user;
+    document.getElementById('inp-admin-password').value = '';
+    
+    // Reset Form
+    userInp.value = '';
+    passInp.value = '';
+    codeInp.value = '';
+});
+
+
+// Fungsi Login Admin dengan Animasi Shake & Validasi Array Accounts
+document.getElementById('btn-admin-login')?.addEventListener('click', () => {
+  const btn = document.getElementById('btn-admin-login');
+  const oriText = btn.innerHTML;
+  
+  const userInput = document.getElementById('inp-admin-username');
+  const pwdInput = document.getElementById('inp-admin-password');
+  
+  const user = userInput.value.trim();
+  const pass = pwdInput.value.trim();
+  
+  if (!user || !pass) {
+      if(!user) userInput.classList.add('error');
+      if(!pass) pwdInput.classList.add('error');
+      showToast('warning', 'Validasi Gagal', 'Username dan password tidak boleh kosong.');
+      setTimeout(() => { userInput.classList.remove('error'); pwdInput.classList.remove('error'); }, 500);
+      return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = 'Memverifikasi...';
+
+  // Load Registered Accounts
+  let accounts = JSON.parse(localStorage.getItem('cbt_admin_accounts') || '[]');
+  const isDefault = (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD);
+  const isSaved = accounts.some(a => a.username === user && a.password === pass);
+
+  if (isDefault || isSaved) {
+    sessionStorage.setItem("adminLogin", "true");
+    isAdminLoggedIn = true; 
+    
+    // Setup ID Guru untuk dashboard dan isolasi
+    let activeTeacherId = "GURU-ADMIN";
+    if (isSaved) {
+        const acc = accounts.find(a => a.username === user && a.password === pass);
+        activeTeacherId = acc.teacherId || "GURU-" + Math.random().toString(36).substr(2, 4).toUpperCase();
+    }
+    sessionStorage.setItem("activeTeacherId", activeTeacherId);
+    
+    userInput.classList.remove('error');
+    pwdInput.classList.remove('error');
+    userInput.value = '';
+    pwdInput.value = '';
+    btn.innerHTML = oriText;
+    btn.disabled = false;
+    
+    showScreen('screen-admin-dashboard');
+    initAdminDashboardSetup(); // Inisiasi Card Setup / Generator 
+    loadAdminData(); 
+    showToast('success', 'Akses Diberikan', 'Selamat datang di Panel Admin.');
+  } else {
+    userInput.classList.add('error', 'shake');
+    pwdInput.classList.add('error', 'shake');
+    showToast('error', 'Akses Ditolak', 'Username atau password salah!');
+    setTimeout(() => { 
+      userInput.classList.remove('error', 'shake'); 
+      pwdInput.classList.remove('error', 'shake'); 
+      btn.innerHTML = oriText;
+      btn.disabled = false;
+    }, 500);
+  }
+});
+
+// Dukungan Enter Admin Form Login
+document.getElementById('inp-admin-password')?.addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') document.getElementById('btn-admin-login').click();
+});
+
+
+// ----------------------------------------------------
+// 🏫 LOGIKA SETUP SEKOLAH & LINK GENERATOR (DI DASHBOARD)
+// ----------------------------------------------------
+function initAdminDashboardSetup() {
+    const currentName = localStorage.getItem("cbt_school_name") || "";
+    const activeTeacherId = sessionStorage.getItem("activeTeacherId") || "";
+
+    document.getElementById("admin-setup-school").value = currentName;
+    document.getElementById("admin-setup-teacher-id").value = activeTeacherId;
+
+    updateLinkDisplay(activeTeacherId);
+}
+
+// Simpan Identitas & Generate Kode
+document.getElementById('btn-admin-save-setup')?.addEventListener('click', () => {
+    const name = document.getElementById("admin-setup-school").value.trim();
+    if (!name) return showToast('error', 'Validasi Gagal', 'Nama Sekolah / Kelas wajib diisi');
+
+    const logoInput = document.getElementById('admin-setup-logo')?.value.trim();
+    const activeTeacherId = sessionStorage.getItem("activeTeacherId");
+
+    localStorage.setItem("cbt_school_name", name);
+    // Masih simpan school_code untuk backward compatibility backend
+    localStorage.setItem("cbt_school_code", name.toLowerCase().replace(/[^a-z0-9]/g, ''));
+    
+    if (logoInput) {
+        localStorage.setItem("cbt_school_logo", logoInput);
+    } else {
+        localStorage.removeItem("cbt_school_logo");
+    }
+
+    applySchoolIdentity(); // Terapkan UI langsung
+    updateLinkDisplay(activeTeacherId);
+    showToast('success', 'Ruangan Siap', 'Sekolah berhasil disimpan dan link akses ujian siswa telah dibuat.');
+    loadAdminData(); // Refresh Data karena pindah "room"
+});
+
+function updateLinkDisplay(teacherId) {
+    if (!teacherId) return;
+    // Bentuk URL sesuai instruksi: ?role=siswa&teacher=ID_GURU
+    const link = window.location.origin + window.location.pathname + "?role=siswa&teacher=" + teacherId;
+    document.getElementById("admin-setup-link").value = link;
+}
+
+// Fitur Copy Link Ujian
+document.getElementById('btn-copy-link')?.addEventListener('click', () => {
+    const linkInput = document.getElementById("admin-setup-link");
+    if(linkInput.value.includes("?role=siswa")) {
+        navigator.clipboard.writeText(linkInput.value).then(() => {
+            showToast('success', 'Tersalin', 'Link akses berhasil disalin ke clipboard');
+        }).catch(() => {
+            linkInput.select();
+            document.execCommand('copy');
+            showToast('success', 'Tersalin', 'Link akses berhasil disalin ke clipboard');
+        });
+    } else {
+        showToast('warning', 'Link Belum Siap', 'Silakan klik Simpan terlebih dahulu.');
+    }
+});
+// ----------------------------------------------------
+
+
+// Refresh Data Panel Admin
+function refreshAdmin() {
+  loadAdminData();
+}
+
+document.getElementById('btn-admin-refresh')?.addEventListener('click', () => {
+  if(!sessionStorage.getItem("adminLogin")) return;
+  refreshAdmin();
+});
+
+// Clear Data via Admin
+async function clearData() {
+  const API_URL = BACKEND_API_URL;
+  const teacherId = sessionStorage.getItem("activeTeacherId") || "default";
+  
+  showToast('info', 'Menghapus', 'Proses sinkronisasi dengan database...');
+  try {
+    const payload = { mode: 'clear', password: ADMIN_PASSWORD, teacher: teacherId, school: localStorage.getItem("cbt_school_code") };
+    const res = await fetch(API_URL, {
+      method: 'POST',
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.status === 'success') {
-        showToast("success", "Tersimpan", "Hasil ujian berhasil disimpan di server!");
-      } else {
-        throw new Error(data.message || "Unknown error dari server");
-      }
-    })
-    .catch(err => {
-      console.error("Error mengirim hasil:", err);
-      retries--;
-      if (retries > 0) {
-        showToast("warning", "Mencoba Ulang", `Gagal mengirim data. Mencoba lagi... (${retries}x)`);
-        setTimeout(attemptSend, 2000);
-      } else {
-        showToast("error", "Sinkronisasi Gagal", "Gagal menyimpan hasil ke server utama setelah beberapa percobaan.");
-      }
     });
-  };
-
-  attemptSend();
+    const json = await res.json();
+    
+    if(json.status === 'success') {
+      showToast('success', 'Berhasil', 'Data berhasil dihapus dari server.');
+      loadAdminData();
+    } else {
+      showToast('error', 'Gagal', json.message || "Gagal menghapus data");
+    }
+  } catch(e) {
+    showToast('error', 'Koneksi Gagal', 'Gagal terhubung ke server.');
+  }
 }
 
-function fetchLeaderboard() {
-  const schoolCode = localStorage.getItem("cbt_school_code") || "default";
-  const lbList = document.getElementById('leaderboard-list');
+document.getElementById('btn-admin-clear')?.addEventListener('click', () => {
+  if(!sessionStorage.getItem("adminLogin")) return;
 
-  // Indikator Loading
-  lbList.innerHTML = '<div style="text-align:center; padding:15px; color:var(--gray-500);">⏳ Mengambil data leaderboard dari server...</div>';
+  showCustomModal({
+    type: 'danger',
+    title: 'Hapus Semua Data?',
+    message: 'Yakin hapus semua data partisipan untuk Ruangan Ujian (Sekolah) ini?',
+    confirmText: 'Hapus Permanen',
+    cancelText: 'Batal',
+    onConfirm: () => {
+      clearData();
+    }
+  });
+});
 
-  let retries = 3;
-  const attemptFetch = () => {
-    fetch(`${BACKEND_API_URL}?mode=leaderboard&school=${schoolCode}`)
-      .then(res => res.json())
-      .then(resData => {
-        lbList.innerHTML = '';
-        
-        // Data asli ada di dalam resData.data dari backend kita
-        const data = resData.data || [];
+// Fetch Data ke Table Admin Dashboard
+async function loadAdminData() {
+  const API_URL = BACKEND_API_URL;
+  const teacherId = sessionStorage.getItem("activeTeacherId") || "default";
+  const tbody = document.getElementById('admin-table');
+  
+  document.getElementById('total-siswa').textContent = '...';
+  document.getElementById('avg-score').textContent = '...';
+  
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="5" style="text-align:center; padding:40px;">
+        <svg style="animation: spin 1s linear infinite; width:32px; height:32px; color:var(--blue-500);" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <div style="margin-top:12px; font-weight:600; color:var(--gray-600);">Sinkronisasi Data Siswa...</div>
+      </td>
+    </tr>`;
 
-        if (!data || data.length === 0) {
-           lbList.innerHTML = '<div style="text-align:center; padding:15px; color:var(--gray-500);">Belum ada data klasemen dari server.</div>';
-           return;
-        }
+  try {
+    if (API_URL === "PASTE_APPS_SCRIPT_URL") throw new Error("API URL Belum Disetel");
 
-        data.forEach((r, idx) => {
-          const isMe = r.nama === state.nama;
-          const timeStr = r.waktu ? `${Math.floor(r.waktu / 60)}m ${r.waktu % 60}s` : '-';
-          
-          lbList.innerHTML += `
-            <div class="lb-row ${isMe ? 'is-me' : ''}">
-              <div class="lb-rank">#${idx + 1}</div>
-              <div class="lb-name">${escHtml(r.nama)}${isMe ? ' (Kamu)' : ''}</div>
-              <div class="lb-score">${r.score || r.skor}</div>
-              <div class="lb-time">⏱️ ${timeStr}</div>
-            </div>
-          `;
-        });
-      })
-      .catch(err => {
-        console.error("Gagal fetch leaderboard backend:", err);
-        retries--;
-        if (retries > 0) {
-          lbList.innerHTML = `<div style="text-align:center; padding:15px; color:var(--amber-500);">⚠️ Gagal memuat. Mencoba ulang... (${retries}x)</div>`;
-          setTimeout(attemptFetch, 2000);
-        } else {
-          lbList.innerHTML = '<div style="text-align:center; padding:15px; color:var(--red-500);">❌ Gagal memuat leaderboard dari server.</div>';
-          showToast("error", "Leaderboard Error", "Gagal memuat leaderboard dari server.");
-        }
-      });
-  };
+    // Pass both teacher and school parameters in case backend is relying on either one
+    const res = await fetch(`${API_URL}?mode=allData&teacher=${teacherId}&school=${localStorage.getItem("cbt_school_code")}`);
+    const json = await res.json();
 
-  attemptFetch();
+    const data = json.data || [];
+    
+    // Frontend Isolation fallback just in case backend ignores the teacher parameter
+    const strictlyFilteredData = data.filter(item => item.teacher === teacherId || !item.teacher);
+
+    renderAdminTable(strictlyFilteredData);
+    renderStats(strictlyFilteredData);
+    showToast('success', 'Tersinkronisasi', 'Data ujian siswa di ruangan ini berhasil ditarik.');
+  } catch (err) {
+    console.error(err);
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--red-500);">❌ Gagal memuat data. Periksa jaringan internet Anda / Pastikan API Aktif.</td></tr>';
+    showToast('error', 'Backend Error', 'Gagal memuat data dari server.');
+  }
+}
+
+function renderAdminTable(data) {
+  const table = document.getElementById("admin-table");
+  if (!table) return;
+  table.innerHTML = "";
+
+  if (data.length === 0) {
+    table.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--gray-500);"><div style="font-size:32px; margin-bottom:8px;">📭</div>Belum ada partisipan yang menyelesaikan ujian di Ruangan ini.</td></tr>';
+    return;
+  }
+
+  // Format pengurutan (Ranking berdasarkan score tertinggi)
+  data.sort((a, b) => (b.score || b.skor || 0) - (a.score || a.skor || 0));
+
+  data.forEach((r, index) => {
+    const itemScore = r.score || r.skor || 0;
+    const timeVal = r.waktu || 0;
+    const timeStr = timeVal ? `${Math.floor(timeVal / 60)}m ${timeVal % 60}s` : '-';
+    const dateStr = r.timestamp ? new Date(r.timestamp).toLocaleString('id-ID', {day: 'numeric', month:'short', hour:'2-digit', minute:'2-digit'}) : '-';
+
+    const row = `
+      <tr>
+        <td style="font-weight:700; color:var(--gray-500);">#${index + 1}</td>
+        <td style="font-weight:700; color:var(--blue-900);">${escHtml(r.nama || 'Anonim')}</td>
+        <td><span class="badge-score">${itemScore} Point</span></td>
+        <td><span class="badge-time">⏱️ ${timeStr}</span></td>
+        <td style="font-size:12px; color:var(--gray-500);">${dateStr}</td>
+      </tr>
+    `;
+    table.innerHTML += row;
+  });
+}
+
+function renderStats(data) {
+  const total = data.length;
+  let totalScore = 0;
+  data.forEach(r => totalScore += (r.score || r.skor || 0));
+  const avg = total > 0 ? (totalScore / total) : 0;
+
+  document.getElementById("total-siswa").innerText = total;
+  document.getElementById("avg-score").innerText = Math.round(avg);
 }
 // =========================================================================
-// === BACKEND INTEGRATION END ===
+// === FITUR BARU: ADMIN LOGIC SCRIPT END ===
 // =========================================================================
 </script>
 </body>
