@@ -965,7 +965,8 @@ body {
   flex: 1; padding: 14px; border-radius: var(--radius);
   font-size: 14.5px; font-weight: 700; border: none; cursor: pointer;
   transition: all var(--transition);
-  position: relative overflow: hidden;
+  position: relative;
+  overflow: hidden;
 }
 .modal-btn.cancel { background: var(--gray-100); color: var(--gray-700); }
 .modal-btn.cancel:hover { background: var(--gray-200); }
@@ -1205,6 +1206,29 @@ body {
       <button class="btn-primary amber ripple-target" id="btn-admin-login">
         Masuk Dashboard
       </button>
+      
+      <!-- TAMBAHAN KODE: Link Daftar Admin -->
+      <div style="text-align: center; margin-top: 16px;">
+        <a href="javascript:void(0)" onclick="toggleAdminRegister(true)" style="color: var(--blue-600); font-size: 13px; text-decoration: none; font-weight: 600;">Belum punya akun? Daftar Admin</a>
+      </div>
+    </div>
+
+    <!-- TAMBAHAN KODE: FORM REGISTER ADMIN (Awalnya disembunyikan) -->
+    <div id="form-admin-register" class="hidden">
+      <div class="form-group">
+        <label for="inp-reg-username">Username Baru</label>
+        <input class="form-input" id="inp-reg-username" type="text" placeholder="Buat Username" autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label for="inp-reg-password">Password Baru</label>
+        <input class="form-input" id="inp-reg-password" type="password" placeholder="Buat Password" />
+      </div>
+      <button class="btn-primary ripple-target" id="btn-admin-register">
+        Daftar Admin
+      </button>
+      <div style="text-align: center; margin-top: 16px;">
+        <a href="javascript:void(0)" onclick="toggleAdminRegister(false)" style="color: var(--gray-500); font-size: 13px; text-decoration: none; font-weight: 600;">Sudah punya akun? Login di sini</a>
+      </div>
     </div>
 
     <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--gray-200);">
@@ -2877,7 +2901,7 @@ document.getElementById('btn-admin-login')?.addEventListener('click', async () =
       if (data.status === 'success') {
           // Menyimpan ID Guru agar tidak tercampur
           const foundTeacherId = data.data ? data.data.teacher : data.teacherId; 
-          localStorage.setItem("teacher", foundTeacherId);
+          localStorage.setItem("teacher", foundTeacherId || username);
           
           userInput.classList.remove('error');
           pwdInput.classList.remove('error');
@@ -2904,6 +2928,64 @@ document.getElementById('btn-admin-login')?.addEventListener('click', async () =
 // Dukungan Enter Admin Form Login
 document.getElementById('inp-admin-password')?.addEventListener('keypress', function(e) {
   if (e.key === 'Enter') document.getElementById('btn-admin-login').click();
+});
+
+// === TAMBAHAN KODE: FITUR REGISTER ADMIN ===
+function toggleAdminRegister(show) {
+  if(show) {
+    document.getElementById('form-admin-login').classList.add('hidden');
+    document.getElementById('form-admin-register').classList.remove('hidden');
+  } else {
+    document.getElementById('form-admin-register').classList.add('hidden');
+    document.getElementById('form-admin-login').classList.remove('hidden');
+  }
+}
+
+document.getElementById('btn-admin-register')?.addEventListener('click', async () => {
+  const btn = document.getElementById('btn-admin-register');
+  const oriText = btn.innerHTML;
+  
+  const userInput = document.getElementById('inp-reg-username');
+  const pwdInput = document.getElementById('inp-reg-password');
+  
+  const username = userInput.value.trim();
+  const password = pwdInput.value.trim();
+  
+  if (!username || !password) {
+      if(!username) userInput.classList.add('error');
+      if(!password) pwdInput.classList.add('error');
+      showToast('warning', 'Validasi Gagal', 'Username dan Password tidak boleh kosong!');
+      setTimeout(() => { userInput.classList.remove('error'); pwdInput.classList.remove('error'); }, 500);
+      return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = 'Mendaftarkan...';
+
+  try {
+      const payload = { mode: 'register', username: username, password: password };
+      
+      const res = await fetch(BACKEND_API_URL, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (data.status === 'success') {
+          showToast('success', 'Pendaftaran Berhasil', 'Akun berhasil dibuat. Silakan login.');
+          userInput.value = ''; pwdInput.value = '';
+          toggleAdminRegister(false);
+      } else {
+          userInput.classList.add('error', 'shake');
+          showToast('error', 'Pendaftaran Gagal', data.message || 'Username sudah digunakan.');
+          setTimeout(() => { userInput.classList.remove('error', 'shake'); }, 500);
+      }
+  } catch (e) {
+      showToast('error', 'Koneksi Gagal', 'Gagal menghubungi server.');
+  } finally {
+      btn.disabled = false;
+      btn.innerHTML = oriText;
+  }
 });
 
 
