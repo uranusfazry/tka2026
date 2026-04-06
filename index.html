@@ -1611,53 +1611,61 @@ function applySchoolIdentity() {
 }
 
 function sendResultToBackend(finalScore) {
-  const schoolCode = localStorage.getItem("cbt_school_name") || localStorage.getItem("cbt_school_code") || "default";
-  const teacherId = localStorage.getItem("teacher") || "default_teacher";
-  const timeSpent = (60 * 60) - state.timer;
+  let teacherId = localStorage.getItem("teacher");
+  let totalTime = (60 * 60) - state.timer;
+  
+  // Memastikan nama terambil dengan benar, fallback 3 layer (State -> LocalStorage -> Input UI)
+  let currentUserName = state.nama || localStorage.getItem("cbt_nama") || document.getElementById("inp-nama").value.trim();
+  
+  // Mengambil nama sekolah dari UI sesuai instruksi, fallback ke LocalStorage
+  let schoolNameUI = document.querySelector(".school-name") ? document.querySelector(".school-name").innerText : "";
 
-  // 🔧 2. SAAT KIRIM KE BACKEND (Fallback Logika)
-  const namaFix = state.nama || localStorage.getItem("cbt_nama") || "Anonim";
-
-  // 🔧 4. DEBUG SYSTEM
-  console.log("STATE:", state.nama);
-  console.log("LOCAL:", localStorage.getItem("cbt_nama"));
-  console.log("FINAL:", namaFix);
-
-  // 🔧 3. VALIDASI SEBELUM KIRIM
-  if (!namaFix || namaFix === "Anonim") {
-    showToast("error", "Data Gagal Dikirim", "Nama siswa kosong! Sesi tidak valid.");
-    return; // Jangan kirim ke backend jika nama tidak ada
-  }
-
-  const payload = {
-    mode: "submit", 
-    nama: namaFix,
-    score: finalScore,
-    school: schoolCode,
-    teacher: teacherId,
-    waktu: timeSpent
+  // 🔧 FRONTEND — HARUS KIRIM INI (PAYLOAD OBJECT JSON)
+  const data = {
+    mode: "submit",
+    nama: currentUserName,
+    score: Number(finalScore),
+    school: schoolNameUI || localStorage.getItem("cbt_school_name") || "Default School",
+    waktu: Number(totalTime) || 0,
+    teacher: teacherId || "default"
   };
+
+  // 💣 DEBUG WAJIB
+  console.log("DATA FINAL:", data);
+
+  // 🧠 VALIDASI DI FRONTEND SEBELUM KIRIM
+  try {
+    if (!data.nama || data.nama === "Anonim") throw "Nama kosong";
+    if (isNaN(data.score)) throw "Score invalid";
+  } catch (errMsg) {
+    showToast("error", "Error", errMsg);
+    return; // Berhenti dan jangan lakukan fetch jika validasi gagal
+  }
 
   showToast("info", "Menyimpan Hasil", "Sedang mengirim data ke server...");
 
   let retries = 3;
-  const attemptSend = () => {
-    if (API_URL === "PASTE_APPS_SCRIPT_URL") return; 
+  const attemptSend = async () => {
+    if (BACKEND_API_URL === "PASTE_APPS_SCRIPT_URL") return; 
     
-    fetch(BACKEND_API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.status === 'success') {
+    try {
+      // 🔥 FETCH YANG BENAR
+      const res = await fetch(BACKEND_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      });
+      
+      const json = await res.json();
+      
+      if (json.status === 'success') {
         showToast("success", "Tersimpan", "Hasil ujian berhasil disimpan di server!");
       } else {
-        throw new Error(data.message || "Unknown error dari server");
+        throw new Error(json.message || "Unknown error dari server");
       }
-    })
-    .catch(err => {
+    } catch (err) {
       console.error("Error mengirim hasil:", err);
       retries--;
       if (retries > 0) {
@@ -1666,7 +1674,7 @@ function sendResultToBackend(finalScore) {
       } else {
         showToast("error", "Sinkronisasi Gagal", "Gagal menyimpan hasil ke server utama setelah beberapa percobaan.");
       }
-    });
+    }
   };
 
   attemptSend();
@@ -2888,7 +2896,7 @@ function toggleAdminTab(mode) {
 }
 
 // === FITUR 3: DAFTAR GURU (API INTEGRATION) ===
-document.getElementById('btn-admin-register')?.addEventListener('click', async () => {
+async function handleRegister() {
     const btn = document.getElementById('btn-admin-register');
     const userInp = document.getElementById('inp-register-username');
     const passInp = document.getElementById('inp-register-password');
@@ -2898,15 +2906,36 @@ document.getElementById('btn-admin-register')?.addEventListener('click', async (
     const password = passInp.value.trim();
     const devCode = codeInp.value.trim();
 
-    if (!username || !password) {
-        showToast('warning', 'Validasi Gagal', 'Isi semua field!');
+    // Reset errors
+    userInp.classList.remove('error');
+    passInp.classList.remove('error');
+    codeInp.classList.remove('error');
+
+    if (!username) {
+        userInp.classList.add('error', 'shake');
+        showToast('error', 'Gagal', 'Username tidak boleh kosong');
+        setTimeout(() => userInp.classList.remove('shake'), 500);
+        return;
+    }
+
+    if (!password) {
+        passInp.classList.add('error', 'shake');
+        showToast('error', 'Gagal', 'Password tidak boleh kosong');
+        setTimeout(() => passInp.classList.remove('shake'), 500);
+        return;
+    }
+
+    if (!devCode) {
+        codeInp.classList.add('error', 'shake');
+        showToast('error', 'Gagal', 'Kode developer wajib diisi');
+        setTimeout(() => codeInp.classList.remove('shake'), 500);
         return;
     }
 
     if (devCode !== ACCESS_CODE) { // ACCESS_CODE: "uranusfazry123"
         codeInp.classList.add('error', 'shake');
-        showToast('error', 'Akses Ditolak', 'Kode developer salah!');
-        setTimeout(() => codeInp.classList.remove('error', 'shake'), 500);
+        showToast('error', 'Akses Ditolak', 'Kode Akses Developer salah!');
+        setTimeout(() => codeInp.classList.remove('shake'), 500);
         return;
     }
 
@@ -2916,26 +2945,37 @@ document.getElementById('btn-admin-register')?.addEventListener('click', async (
     const teacherId = "GURU-" + Date.now();
 
     try {
+        if (BACKEND_API_URL === "PASTE_APPS_SCRIPT_URL") {
+            throw new Error("API Google Script belum disetel.");
+        }
+
+        // Kirim ke Backend
         const res = await fetch(BACKEND_API_URL, {
             method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({
                 mode: 'register',
+                action: 'register',
+                nama: username, // 🔥 PENTING: Bypass error "Nama kosong" di backend
                 username: username,
                 password: password,
+                devCode: devCode,
                 teacher: teacherId
             })
         });
         
         const json = await res.json();
 
+        // Handle Response
         if (json.status === 'success') {
             localStorage.setItem("teacher", teacherId);
-            showToast('success', 'Berhasil', 'Akun berhasil dibuat.');
-            showScreen('screen-admin-dashboard');
-            initAdminDashboardSetup();
-            loadAdminData();
+            showToast('success', 'Berhasil', 'Akun berhasil dibuat. Silakan login.');
+            toggleAdminTab('login');
             
-            // Clean inputs for next time
+            // Auto fill form login
+            document.getElementById('inp-admin-username').value = username;
+            document.getElementById('inp-admin-password').value = '';
+            
             userInp.value = ''; passInp.value = ''; codeInp.value = '';
         } else {
             userInp.classList.add('error', 'shake');
@@ -2943,12 +2983,31 @@ document.getElementById('btn-admin-register')?.addEventListener('click', async (
             setTimeout(() => userInp.classList.remove('error', 'shake'), 500);
         }
     } catch (e) {
-        showToast('error', 'Koneksi Gagal', 'Gagal menghubungi server.');
+        // Fallback (Simulasi) jika API belum disetel
+        if (e.message === "API Google Script belum disetel.") {
+            showToast('info', 'Simulasi', 'Database belum disetel. Melanjutkan dengan simulasi.');
+            let accounts = JSON.parse(localStorage.getItem('cbt_admin_accounts') || '[]');
+            if (accounts.some(a => a.username === username)) {
+                showToast('error', 'Gagal', 'Username sudah terdaftar.');
+            } else {
+                const generatedTeacherId = "GURU-" + Math.random().toString(36).substr(2, 4).toUpperCase();
+                accounts.push({ username: username, password: password, teacherId: generatedTeacherId });
+                localStorage.setItem('cbt_admin_accounts', JSON.stringify(accounts));
+                toggleAdminTab('login');
+                document.getElementById('inp-admin-username').value = username;
+                userInp.value = ''; passInp.value = ''; codeInp.value = '';
+                showToast('success', 'Berhasil', 'Akun simulasi berhasil dibuat.');
+            }
+        } else {
+            showToast('error', 'Koneksi Gagal', 'Tidak dapat terhubung ke server database.');
+        }
     } finally {
         btn.disabled = false;
         btn.innerHTML = 'Buat Akun & Masuk';
     }
-});
+}
+
+document.getElementById('btn-admin-register')?.addEventListener('click', handleRegister);
 
 
 // === FITUR 4: LOGIN ADMIN (API INTEGRATION) ===
@@ -2989,10 +3048,17 @@ document.getElementById('btn-admin-login')?.addEventListener('click', async () =
 
   // 2. Cek ke Database (Google Script)
   try {
-      const payload = { mode: 'login', username: username, password: password };
+      const payload = { 
+          mode: 'login', 
+          action: 'login', 
+          nama: username, 
+          username: username, 
+          password: password 
+      };
       
       const res = await fetch(BACKEND_API_URL, {
           method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
       });
       const data = await res.json();
@@ -3017,7 +3083,23 @@ document.getElementById('btn-admin-login')?.addEventListener('click', async () =
           setTimeout(() => { userInput.classList.remove('error', 'shake'); pwdInput.classList.remove('error', 'shake'); }, 500);
       }
   } catch (e) {
-      showToast('error', 'Koneksi Gagal', 'Gagal menghubungi server.');
+      // Fallback jika API belum disetel (Simulator)
+      if (e.message === "API Google Script belum disetel.") {
+          let accounts = JSON.parse(localStorage.getItem('cbt_admin_accounts') || '[]');
+          const isSaved = accounts.some(a => a.username === username && a.password === password);
+          if (isSaved) {
+              const acc = accounts.find(a => a.username === username && a.password === password);
+              localStorage.setItem("teacher", acc.teacherId);
+              showScreen('screen-admin-dashboard');
+              initAdminDashboardSetup(); loadAdminData();
+              showToast('info', 'Akses Diberikan', 'Simulasi Login Berhasil.');
+              userInput.value = ''; pwdInput.value = '';
+          } else {
+              showToast('error', 'Akses Ditolak', 'Simulasi gagal, akun tidak ada.');
+          }
+      } else {
+          showToast('error', 'Koneksi Gagal', 'Gagal menghubungi server.');
+      }
   } finally {
       btn.disabled = false;
       btn.innerHTML = oriText;
@@ -3063,7 +3145,7 @@ document.getElementById('btn-admin-save-setup')?.addEventListener('click', () =>
 
     // Build unique access link
     const link = window.location.origin + window.location.pathname +
-        `?school=${encodeURIComponent(school)}&teacher=${encodeURIComponent(teacher)}` +
+        `?role=siswa&school=${encodeURIComponent(school)}&teacher=${encodeURIComponent(teacher)}` +
         (logo ? `&logo=${encodeURIComponent(logo)}` : ``);
 
     document.getElementById("admin-setup-link").value = link;
@@ -3080,7 +3162,7 @@ function updateLinkDisplay() {
     if (!teacherId || !school) return;
     
     const link = window.location.origin + window.location.pathname +
-        `?school=${encodeURIComponent(school)}&teacher=${encodeURIComponent(teacherId)}` +
+        `?role=siswa&school=${encodeURIComponent(school)}&teacher=${encodeURIComponent(teacherId)}` +
         (logo ? `&logo=${encodeURIComponent(logo)}` : ``);
 
     document.getElementById("admin-setup-link").value = link;
@@ -3089,7 +3171,7 @@ function updateLinkDisplay() {
 // Fitur Copy Link Ujian
 document.getElementById('btn-copy-link')?.addEventListener('click', () => {
     const linkInput = document.getElementById("admin-setup-link");
-    if(linkInput.value.includes("?school=")) {
+    if(linkInput.value.includes("?role=siswa")) {
         navigator.clipboard.writeText(linkInput.value).then(() => {
             showToast('success', 'Tersalin', 'Link akses berhasil disalin ke clipboard');
         }).catch(() => {
@@ -3119,6 +3201,7 @@ async function clearData() {
     const payload = { mode: 'clear', password: ADMIN_PASSWORD, teacher: teacherId };
     const res = await fetch(BACKEND_API_URL, {
       method: 'POST',
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload)
     });
     const json = await res.json();
